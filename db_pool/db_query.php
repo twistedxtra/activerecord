@@ -422,7 +422,7 @@ class DbQuery
         // si no existe la clase la carga
         if(!class_exists($class, false)) {
             // carga la clase
-            require CORE_PATH . "libs/db_pool/adapthers/{$databases['type']}_query.php";
+            require CORE_PATH . "libs/ActiveRecord/db_pool/adapthers/{$databases['type']}_query.php";
         }
         
         return new $class($connection);

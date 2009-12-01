@@ -23,7 +23,7 @@
 /**
  * @see DbQuery
  **/
-require CORE_PATH . 'libs/db_pool/db_query.php';
+require CORE_PATH . 'libs/ActiveRecord/db_pool/db_query.php';
 
 /**
  * Clase que maneja el pool de conexiones
