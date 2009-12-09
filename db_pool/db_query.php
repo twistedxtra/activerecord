@@ -23,139 +23,33 @@
 class DbQuery
 {
     /**
-     * Nombre de tabla asociada al modelo
-     *
-     * @var string
-     **/
-    protected $_table;
-
-    /**
-     * Nombre del esquema donde se ubica la tabla
-     *
-     * @var string
-     **/
-    protected $_schema;
-
-    /**
-     * Condicion para WHERE
-     *
-     * @var string
-     **/
-    protected $_where = null;
-
-    /**
-     * INNER JOIN a realizar
+     * Partes de la consulta sql
      *
      * @var array
      **/
-    protected $_join = array();
+    protected $_sql = array();
 
     /**
-     * LEFT OUTER JOIN a realizar
+     * Clausula DISTINCT
      *
-     * @var array
+     * @param boolean $distinct
+     * @return DbQuery
      **/
-    protected $_leftJoin = array();
-
-    /**
-     * RIGHT OUTER JOIN a realizar
-     *
-     * @var array
-     **/
-    protected $_rightJoin = array();
-    
-    /**
-     * FULL JOIN a realizar
-     *
-     * @var array
-     **/
-    protected $_fullJoin = array();
-
-    /**
-     * GROUP a realizar
-     *
-     * @var array
-     **/
-    protected $_group = null;
-    
-    /**
-     * Condicion para HAVING
-     *
-     * @var string
-     **/
-    protected $_having = null;
-    
-    /**
-     * Criterio de ordenamiento
-     *
-     * @var string
-     **/
-    protected $_order = null;
-
-    /**
-     * OFFSET
-     *
-     * @var string
-     **/
-    protected $_offset = null;
-
-    /**
-     * LIMIT
-     *
-     * @var string
-     **/
-    protected $_limit = null;
-
-    /**
-     * Nombre de conexion
-     *
-     * @var string
-     **/
-    protected $_connection;
-
-    /**
-     * Constructor
-     *
-     * @param string $connection nombre de conexion en databases.ini
-     **/
-    public function __construct($connection)
+    public function distinct($distinct) 
     {
-        $this->_connection = $connection;
-    }
-
-    /**
-     * Genera la fuente de datos
-     *
-     * @return string
-     **/
-    protected function _getSource()
-    {
-        $source = $this->_table;
-        if($this->_schema) {
-            $source = $this->_schema . '.' . $source;
-        }
-        
-        return $source;
+        $this->_sql['distinct'] = $distinct;
+        return $this;
     }
 
     /**
      * Clausula WHERE
      *
      * @param string | array $conditions condiciones
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function where($conditions) 
     {
-        // para cuando se pasa por array
-        if(is_array($conditions)) {
-            $buff = array();
-            foreach($conditions as $column => $value) {
-                $buff[] = "$column=\"" . DbPool::factory($this->_connection)->quote($value) . '"'; 
-            }
-            $conditions = implode(' AND ', $buff);
-        }
-        
-        $this->_where = $conditions;
+        $this->_sql['where'] = $conditions;
         return $this;
     }
     
@@ -164,11 +58,11 @@ class DbQuery
      *
      * @param string $table nombre de tabla
      * @param string $conditions condiciones
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function join($table, $conditions) 
     {
-        $this->_join[] = array('table' => $table, 'conditions' => $conditions);
+        $this->_sql['join'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -177,11 +71,11 @@ class DbQuery
      *
      * @param string $table nombre de tabla
      * @param string $conditions condiciones
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function leftJoin($table, $conditions) 
     {
-        $this->_leftJoin[] = array('table' => $table, 'conditions' => $conditions);
+        $this->_sql['leftJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -190,11 +84,11 @@ class DbQuery
      *
      * @param string $table nombre de tabla
      * @param string $conditions condiciones
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function rightJoin($table, $conditions) 
     {
-        $this->_rightJoin[] = array('table' => $table, 'conditions' => $conditions);
+        $this->_sql['rightJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -203,11 +97,11 @@ class DbQuery
      *
      * @param string $table nombre de tabla
      * @param string $conditions condiciones
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function fullJoin($table, $conditions) 
     {
-        $this->_fullJoin[] = array('table' => $table, 'conditions' => $conditions);
+        $this->_sql['fullJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -215,23 +109,35 @@ class DbQuery
      * Columnas de la consulta
      *
      * @param string $table nombre de tabla
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function table($table) 
     {
-        $this->_table = $table;
+        $this->_sql['table'] = $table;
         return $this;
     }
-        
+
+    /**
+     * Columnas de la consulta
+     *
+     * @param string $schema schema donde se ubica la tabla
+     * @return DbQuery
+     **/
+    public function schema($schema) 
+    {
+        $this->_sql['schema'] = $schema;
+        return $this;
+    }
+
     /**
      * Clausula SELECT
      *
      * @param string $criteria criterio de ordenamiento
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function order($criteria) 
     {
-        $this->_order = $criteria;
+        $this->_sql['order'] = $criteria;
         return $this;
     }
     
@@ -239,11 +145,11 @@ class DbQuery
      * Clausula GROUP
      *
      * @param string $columns columnas
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function group($columns) 
     {
-        $this->_group = $columns;
+        $this->_sql['group'] = $columns;
         return $this;
     }    
 
@@ -251,11 +157,11 @@ class DbQuery
      * Clausula HAVING
      *
      * @param string $conditions condiciones
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function having($conditions) 
     {
-        $this->_having = $conditions;
+        $this->_sql['having'] = $conditions;
         return $this;
     }
 
@@ -263,11 +169,11 @@ class DbQuery
      * Clausula LIMIT
      *
      * @param int $limit
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function limit($limit) 
     {
-        $this->_limit = $limit;
+        $this->_sql['limit'] = $limit;
         return $this;
     }   
 
@@ -275,64 +181,13 @@ class DbQuery
      * Clausula OFFSET
      *
      * @param int $offset
-     * @return SqlQuery
+     * @return DbQuery
      **/
     public function offset($offset) 
     {
-        $this->_offset = $offset;
+        $this->_sql['offset'] = $offset;
         return $this;
     }  
-
-    /**
-     * Une con las clausulas adicionales de consulta
-     *
-     * @param string $sql consulta sql donde se unira las clausulas
-     * @return string
-     **/
-    protected function _joinClausules($sql)
-    {
-        foreach($this->_join as $join) {
-            $sql .= " INNER JOIN {$join['table']} ON ({$join['conditions']})";
-        }
-
-        foreach($this->_leftJoin as $join) {
-            $sql .= " LEFT OUTER JOIN {$join['table']} ON ({$join['conditions']})";
-        }
-
-        foreach($this->_rightJoin as $join) {
-            $sql .= " RIGHT OUTER JOIN {$join['table']} ON ({$join['conditions']})";
-        }
-
-        foreach($this->_fullJoin as $join) {
-            $sql .= " FULL JOIN {$join['table']} ON ({$join['conditions']})";
-        }
-
-        if($this->_where) {
-            $sql .= " WHERE $this->_where";
-        }
-    
-        if($this->_group) {
-            $sql .= " GROUP BY $this->_group";
-        }
-
-        if($this->_having) {
-            $sql .= " HAVING $this->_having";
-        }
-
-        if($this->_order) {
-            $sql .= " ORDER BY $this->_order";
-        }
-
-        if(!is_null($this->_limit)) {
-            $sql .= " LIMIT $this->_limit";
-        }
-
-        if(!is_null($this->_offset)) {
-            $sql .= " OFFSET $this->_offset";
-        }
-        
-        return $sql;
-    }
 
     /**
      * Construye la consulta SELECT
@@ -342,37 +197,31 @@ class DbQuery
      **/
     public function select($columns='*') 
     {
-        return $this->_joinClausules("SELECT $columns FROM {$this->_getSource()}");
+        $this->_sql['select'] = $columns;
+        return $this;
     }
     
     /**
      * Construye la consulta DELETE
      *
-     * @return string
+     * @return DbQuery
      **/
     public function delete() 
     {
-        return $this->_joinClausules("DELETE FROM {$this->_getSource()}");
+        $this->_sql['delete'] = true;
+        return $this;
     }
     
     /**
      * Construye la consulta UPDATE
      *
      * @param string | array $values claves/valores
-     * @return string
+     * @return DbQuery
      **/
     public function update($values) 
     {
-        // para cuando se pasa por array
-        if(is_array($values)) {
-            $buff = array();
-            foreach($values as $column => $value) {
-                $buff[] = "$column=\"" . DbPool::factory($this->_connection)->quote($value) . '"'; 
-            }
-            $values = implode(', ', $buff);
-        }
-    
-        return $this->_joinClausules("UPDATE {$this->_getSource()} SET $values");
+        $this->_sql['update'] = $values;
+        return $this;
     }
     
     /**
@@ -380,51 +229,21 @@ class DbQuery
      *
      * @param string | array $columns columnas, o array de claves/valores
      * @param string $values 
-     * @return string
+     * @return DbQuery
      **/
     public function insert($columns, $values=null) 
     {
-        // para cuando se pasa por array
-        if(is_array($columns)) {
-            $buff = array();
-            $values = array();
-            
-            foreach($columns as $column => $value) {
-                $buff[] = $column;
-                $values[] = '"' . DbPool::factory($this->_connection)->quote($value) . '"';
-            }
-            
-            $columns = implode(', ', $buff);
-            $values = implode(', ', $values);
-        }
-    
-        return "INSERT INTO {$this->_getSource()} ($columns) VALUES ($values)";
+        $this->_sql['insert'] = array('columns' => $columns, 'values' => $values);
+        return $this;
     }
     
     /**
-     * Obtiene instancia de query en funcion de la conexion
+     * Obtiene el array base con las partes de la consulta SQL
      *
-     * @param string $connection conexion a base de datos en databases.ini
-     * @return DbQuery
-     * @throw KumbiaException
+     * @return array
      **/
-    public static function factory($connection)
+    public function getSqlArray()
     {
-        // lee la configuracion de base de datos
-        $databases = Config::read('databases.ini');
-        if(!isset($databases[$connection])) {
-            throw new KumbiaException("No existe la conexion $connection en databases.ini");
-        }
-    
-        // genera el nombre de clase
-        $class = ucfirst($databases['type']) . 'Query';
-    
-        // si no existe la clase la carga
-        if(!class_exists($class, false)) {
-            // carga la clase
-            require CORE_PATH . "libs/ActiveRecord/db_pool/adapthers/{$databases['type']}_query.php";
-        }
-        
-        return new $class($connection);
+        return $this->_sql;
     }
 }
