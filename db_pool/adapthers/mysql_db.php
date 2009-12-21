@@ -31,6 +31,24 @@ class MysqlDb extends DbAdapther
      **/
     public function describe($table, $schema=null)
     {
+        if($schema) {
+            $source = "$schema.$table";
+        } else {
+            $source = $table;
+        }
         
+        $tableMetaData = TableMetaData::getInstance($this->_connection, $schema, $table);
+        if(!$tableMetaData->isLoaded()) {
+            $stmt = $this->pdo()->query("DESCRIBE $source");
+            
+            $metadata = array();
+            foreach($stmt as $row) {
+                // aqui falta el codigo para ajustarlo que funcione con el mysql
+            }
+            
+            $tableMetaData->setMetadata($metadata);
+        }
+        
+        return $tableMetaData;
     }
 }

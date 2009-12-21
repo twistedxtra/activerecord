@@ -20,6 +20,11 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
+/**
+ * @see TableMetadata
+ **/
+require CORE_PATH . 'libs/ActiveRecord/db_pool/table_meta_data.php';
+
 abstract class DbAdapther
 {
     /**
