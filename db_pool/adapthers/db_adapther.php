@@ -41,7 +41,7 @@ abstract class DbAdapther
      * @param string $schema schema
      * @return array
      **/
-    abstract public function describe($table, $schema=null);
+    abstract public function describe($table, $schema=NULL);
 
     /**
      * Constructor
@@ -80,7 +80,7 @@ abstract class DbAdapther
         $Class = ucfirst($database['type']) . 'Db';
     
         // si no existe la clase la carga
-        if(!class_exists($Class, false)) {
+        if(!class_exists($Class, FALSE)) {
             // carga la clase
             require CORE_PATH . "libs/ActiveRecord/db_pool/adapthers/{$database['type']}_db.php";
         }
@@ -94,7 +94,7 @@ abstract class DbAdapther
      * @param string $new forzar un nuevo objeto pdo y no el del pool de conexiones
      * @return PDO
      **/
-    public function pdo($new=false)
+    public function pdo($new=FALSE)
     {
         return DbPool::factory($this->_connection, $new);
     }

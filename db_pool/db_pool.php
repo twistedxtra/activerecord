@@ -51,11 +51,15 @@ class DbPool
      * @param boolean $new nueva conexion
      * @return db
      */
-    public static function factory($connection=null, $new=false)
+    public static function factory($connection=NULL, $new=FALSE)
     {
         // carga la conexion por defecto
         if (!$connection) {
             $connection = Config::get('config.application.database');
+        }
+        // check for PDO extension
+        if (!extension_loaded('pdo')) {
+            throw new KumbiaException('La Extension PDO es requerida por este adaptador, pero la extension no esta cargada');
         }
         
         $databases = Config::read('databases');
@@ -82,15 +86,19 @@ class DbPool
         if (! $new && isset(self::$_connections[$connection])) {
             return self::$_connections[$connection];
         }
-        
-        // conecta con pdo
-        $pdo = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
-        
-        //Si no es para conexion nueva, la cargo en el singleton
-        if (! $new) {
-            self::$_connections[$connection] = $pdo;
+        try {
+            // conecta con pdo
+            $pdo = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            //Si no es para conexion nueva, la cargo en el singleton
+            if (! $new) {
+                self::$_connections[$connection] = $pdo;
+            }
+            return $pdo;
+        	
+        } catch (PDOException $e) {
+            throw new KumbiaException($e->getMessage());
         }
-        
-        return $pdo;
     }
 }
