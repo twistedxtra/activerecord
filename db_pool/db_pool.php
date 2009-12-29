@@ -61,6 +61,7 @@ class DbPool
         //Si no es una conexion nueva y existe la conexion singleton
         if (! $new && isset(self::$_connections[$connection])) {
             return self::$_connections[$connection];
+        }
         
         // check for PDO extension
         if (!extension_loaded('pdo')) {
