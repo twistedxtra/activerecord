@@ -88,7 +88,6 @@ class DbPool
             $config['password'] = '';
         }
         
-        }
         try {
             // conecta con pdo
             $pdo = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
