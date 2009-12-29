@@ -37,8 +37,14 @@ class Column
      * Campo con secuencias (serial o auto-increment)
      */
     public $autoIncrement = FALSE;
-    
+    /**
+     * Relaciones
+     */
     public $relation = NULL;
+    /**
+     * Formato para fechas
+     */
+    public $format = NULL;
 	/**
      * @return $_alias
      */
