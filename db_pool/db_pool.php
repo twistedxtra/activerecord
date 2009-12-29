@@ -57,6 +57,11 @@ class DbPool
         if (!$connection) {
             $connection = Config::get('config.application.database');
         }
+        
+        //Si no es una conexion nueva y existe la conexion singleton
+        if (! $new && isset(self::$_connections[$connection])) {
+            return self::$_connections[$connection];
+        
         // check for PDO extension
         if (!extension_loaded('pdo')) {
             throw new KumbiaException('La Extension PDO es requerida por este adaptador, pero la extension no esta cargada');
@@ -64,7 +69,7 @@ class DbPool
         
         $databases = Config::read('databases');
         $config = $databases[$connection];
-        
+
         // carga los valores por defecto para la conexion
         if (! isset($config['port'])) {
             $config['port'] = 0;
@@ -82,9 +87,6 @@ class DbPool
             $config['password'] = '';
         }
         
-        //Si no es una conexion nueva y existe la conexion singleton
-        if (! $new && isset(self::$_connections[$connection])) {
-            return self::$_connections[$connection];
         }
         try {
             // conecta con pdo
