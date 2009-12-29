@@ -65,36 +65,38 @@ class PgsqlDb extends DbAdapther
                     //valor por defecto
                     if (! is_null($field->default)) {
                         if (strpos($field->default, 'nextval(') !== FALSE) {
-                            $column->_isAutoIncrement = TRUE;
+                            $column->autoIncrement = TRUE;
                         } elseif ($field->type == 'serial' || $field->type == 'bigserial') {
-                            $column->_isAutoIncrement = TRUE;
+                            $column->autoIncrement = TRUE;
                         } else {
-                            $column->_default = $field->default;
+                            $column->default = $field->default;
                         }
                     }
                     //puede ser null?
                     if($field->null == 'NO'){
-                        $column->_isNull = FALSE;
+                        $column->notNull = FALSE;
                     }
                     //Relaciones
                     if(substr($field->name, strlen($field->name) -3, 3) == '_id'){
-                        $column->_relation = substr($field->name, 0, -3);
-                        $row->setRelation($field->name, $column->_relation);
+                        $column->relation = substr($field->name, 0, -3);
+                        $row->setRelation($field->name, $column->relation);
                     }
                     //tipo de dato
-                    $column->_dbType = $field->type;
+                    $column->type = $field->type;
                     //longitud
-                    $column->_length = $field->length;
+                    $column->length = $field->length;
                     //indices
                     switch ($field->index){
                         case 'PRI':
                             $row->setPK($field->name);
+                            $column->PK = TRUE;
                             break;
                         case 'FK':
                             $row->setFK($field->name);
+                            $column->FK = TRUE;
                             break;
                         case 'UNI':
-                            $column->_isUni = TRUE;
+                            $column->unique = TRUE;
                             break;
                     }
                 }

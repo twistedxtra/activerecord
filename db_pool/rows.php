@@ -19,7 +19,6 @@ class Rows implements ArrayAccess
     {
         if (! isset($this->_columns[$col])) {
             $this->_columns[$col] = new Column();
-            $this->_columns[$col]->_name = $col;
         }
         return $this->_columns[$col];
     }
