@@ -34,5 +34,74 @@
  */
 class ActiveRecord2
 {
+    /**
+     * Conexion a base datos que se utilizara
+     *
+     * @var strings
+     **/
+    protected $_connection = null;
 
+    /**
+     * Tabla origen de datos
+     *
+     * @var string
+     **/
+    protected $_table = null;
+    
+    /**
+     * Esquema de datos
+     *
+     * @var string
+     **/
+    protected $_schema = null;
+
+    /**
+     * Efectua una busqueda
+     *
+     * @param string|array parametros de busqueda 
+     **/
+    public function find($params=null)
+    {
+        // nuevo contenedor de consulta
+        $dbQuery = new DbQuery();
+    
+        // asigna la tabla
+        $dbQuery->table($this->_table);
+        
+        // asigna el esquema si existe
+        if($this->_schema) {
+            $dbQuery->schema($this->_schema);
+        }
+    
+        // si no se indican parametros de consulta
+        if(!$params) {
+            $dbQuery->select();
+            return $this->findBySql($dbQuery);
+        }
+        
+        // obtiene los parametros de consulta indicados
+        if(!is_array($params)) {
+            $params = Util::getParams(func_get_args());
+        }
+        
+    }
+    
+    /**
+     * Efectua una busqueda de una consulta sql
+     *
+     * @param string | DbQuery $sql
+     **/
+    public function findBySql($sql)
+    {
+        // carga el adaptador especifico para la conexion
+        $adapther = DbAdapther::factory($this->_connection);
+    
+        // si no es un string, entonces es DbQuery
+        if(!is_string($sql)) {
+            $sql = $adapther->query($sql);
+        }
+        
+        // ejecuta la consulta
+        return $adapther->pdo()->query($sql);
+    }
 }
