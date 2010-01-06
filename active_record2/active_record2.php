@@ -19,6 +19,10 @@
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
+/**
+ * @see KumbiaModel
+ */
+require_once CORE_PATH.'libs/ActiveRecord/active_record2/kumbia_model.php';
  
 /**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
