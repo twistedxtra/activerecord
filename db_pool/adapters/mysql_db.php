@@ -20,7 +20,7 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-class MysqlDb extends DbAdapther
+class MysqlDb extends DbAdapter
 {
     /**
      * Obtiene los datos de la tabla

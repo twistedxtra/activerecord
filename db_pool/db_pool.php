@@ -21,9 +21,9 @@
  */
 
 /**
- * @see DbAdapther
+ * @see DbAdapter
  **/
-require CORE_PATH . 'libs/ActiveRecord/db_pool/adapthers/db_adapther.php';
+require CORE_PATH . 'libs/ActiveRecord/db_pool/adapthers/db_adapter.php';
 
 /**
  * @see DbQuery

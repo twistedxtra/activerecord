@@ -25,7 +25,7 @@
  **/
 require CORE_PATH . 'libs/ActiveRecord/db_pool/table_meta_data.php';
 
-abstract class DbAdapther
+abstract class DbAdapter
 {
     /**
      * Nombre de conexion
@@ -57,7 +57,7 @@ abstract class DbAdapther
      * Obtiene instancia de query en funcion de la conexion
      *
      * @param string $connection conexion a base de datos en databases.ini
-     * @return DbAdapther
+     * @return DbAdapter
      * @throw KumbiaException
      **/
     public static function factory($connection=null)
@@ -82,7 +82,7 @@ abstract class DbAdapther
         // si no existe la clase la carga
         if(!class_exists($Class, FALSE)) {
             // carga la clase
-            require CORE_PATH . "libs/ActiveRecord/db_pool/adapthers/{$database['type']}_db.php";
+            require CORE_PATH . "libs/ActiveRecord/db_pool/adapters/{$database['type']}_db.php";
         }
         
         return new $Class($connection);

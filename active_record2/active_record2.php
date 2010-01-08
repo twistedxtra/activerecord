@@ -98,14 +98,14 @@ class ActiveRecord2
     public function findBySql($sql)
     {
         // carga el adaptador especifico para la conexion
-        $adapther = DbAdapther::factory($this->_connection);
+        $adapter = DbAdapter::factory($this->_connection);
     
         // si no es un string, entonces es DbQuery
         if(!is_string($sql)) {
-            $sql = $adapther->query($sql);
+            $sql = $adapter->query($sql);
         }
         
         // ejecuta la consulta
-        return $adapther->pdo()->query($sql);
+        return $adapter->pdo()->query($sql);
     }
 }
