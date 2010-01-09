@@ -1,5 +1,5 @@
 <?php
-class Column 
+class Attributes 
 {
     /**
      * Alias del campo
@@ -37,10 +37,6 @@ class Column
      * Campo con secuencias (serial o auto-increment)
      */
     public $autoIncrement = FALSE;
-    /**
-     * Relaciones
-     */
-    public $relation = NULL;
     /**
      * Formato para fechas
      */

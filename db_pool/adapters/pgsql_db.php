@@ -78,7 +78,6 @@ class PgsqlDb extends DbAdapter
                     }
                     //Relaciones
                     if(substr($field->name, strlen($field->name) -3, 3) == '_id'){
-                        $column->relation = substr($field->name, 0, -3);
                         $row->setRelation($field->name, $column->relation);
                     }
                     //tipo de dato
