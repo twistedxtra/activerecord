@@ -56,46 +56,48 @@ class PgsqlDb extends DbAdapter
             //ejecutando la consulta preparada
             $results = $prepare->execute(array('database'=>'test', 'schema'=>'public', 'table'=>'prueba'));
             if ($results) {
-                require_once CORE_PATH . 'libs/ActiveRecord/db_pool/rows.php';
-                $row = new Rows();
+                require_once CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
+                $metadata = new Metadata();
                 while ($field = $prepare->fetchObject()) {
                     //Nombre del Campo
-                    $column = $row->column($field->name);
-                    $column->setAlias($field->name);
+                    $attribute = $metadata->attribute($field->name);
+                    //alias
+                    $attribute->alias =  ucwords(strtr($field->name,'_-','  '));
                     //valor por defecto
                     if (! is_null($field->default)) {
                         if (strpos($field->default, 'nextval(') !== FALSE) {
-                            $column->autoIncrement = TRUE;
+                            $attribute->autoIncrement = TRUE;
                         } elseif ($field->type == 'serial' || $field->type == 'bigserial') {
-                            $column->autoIncrement = TRUE;
+                            $attribute->autoIncrement = TRUE;
                         } else {
-                            $column->default = $field->default;
+                            $attribute->default = $field->default;
                         }
                     }
                     //puede ser null?
                     if($field->null == 'NO'){
-                        $column->notNull = FALSE;
+                        $attribute->notNull = FALSE;
                     }
                     //Relaciones
                     if(substr($field->name, strlen($field->name) -3, 3) == '_id'){
-                        $row->setRelation($field->name, $column->relation);
+                        $metadata->setRelation($field->name, $attribute->relation);
+                        $attribute->alias =  ucwords(strtr($field->name,'_-','  '));
                     }
                     //tipo de dato
-                    $column->type = $field->type;
+                    $attribute->type = $field->type;
                     //longitud
-                    $column->length = $field->length;
+                    $attribute->length = $field->length;
                     //indices
                     switch ($field->index){
                         case 'PRI':
-                            $row->setPK($field->name);
-                            $column->PK = TRUE;
+                            $metadata->setPK($field->name);
+                            $attribute->PK = TRUE;
                             break;
                         case 'FK':
-                            $row->setFK($field->name);
-                            $column->FK = TRUE;
+                            $metadata->setFK($field->name);
+                            $attribute->FK = TRUE;
                             break;
                         case 'UNI':
-                            $column->unique = TRUE;
+                            $attribute->unique = TRUE;
                             break;
                     }
                 }
@@ -103,6 +105,6 @@ class PgsqlDb extends DbAdapter
         } catch (PDOException $e) {
             throw new KumbiaException($e->getMessage());
         }
-        return $row;
+        return $metadata;
     }
 }
