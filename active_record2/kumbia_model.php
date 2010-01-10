@@ -21,4 +21,24 @@
  */
 class KumbiaModel
 {
+    /**
+     * Instancias de metadata de modelos
+     *
+     * @var array
+     **/
+    private static $_metadata = array();
+    
+    /**
+     * Obtiene la metatada de un modelo
+     *
+     * @return Metadata
+     **/
+    public static function metatata($model)
+    {
+        if(!isset(self::$_metadata[$model])) {
+            self::$_metadata[$model] = new Metadata();
+        }
+        
+        return self::$_metadata[$model];
+    }
 }
