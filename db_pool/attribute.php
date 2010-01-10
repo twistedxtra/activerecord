@@ -1,10 +1,10 @@
 <?php
-class Attributes 
+class Attribute 
 {
     /**
      * Alias del campo
      */
-    private $_alias = NULL;
+    public $alias = NULL;
     /**
      * Tipo de dato de cara a la APP
      */
@@ -40,20 +40,5 @@ class Attributes
     /**
      * Formato para fechas
      */
-    public $format = NULL;
-	/**
-     * @return $_alias
-     */
-    public function getAlias ()
-    {
-        return $this->_alias;
-    }
-	/**
-     * @param String $alias
-     */
-    public function setAlias ($alias)
-    {
-        $this->_alias = ucwords(strtr($alias,'_-','  '));
-    }
-    
+    public $format = NULL;    
 }

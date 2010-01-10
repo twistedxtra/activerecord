@@ -23,7 +23,7 @@
 /**
  * @see TableMetadata
  **/
-require CORE_PATH . 'libs/ActiveRecord/db_pool/table_meta_data.php';
+//require CORE_PATH . 'libs/ActiveRecord/db_pool/table_meta_data.php';
 
 abstract class DbAdapter
 {

@@ -11,8 +11,13 @@
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@kumbiaphp.com so we can send you a copy immediately.
- *
- * Implementación de Modelo
+ */
+/**
+ * @see Metadata
+ */
+require CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
+
+/** Implementación de Modelo
  * 
  * @category   Kumbia
  * @package    ActiveRecord
@@ -33,7 +38,7 @@ class KumbiaModel
      *
      * @return Metadata
      **/
-    public static function metatata($model)
+    public static function metadata($model)
     {
         if(!isset(self::$_metadata[$model])) {
             self::$_metadata[$model] = new Metadata();
