@@ -51,15 +51,15 @@ class DbPool
      * @param boolean $new nueva conexion
      * @return db
      */
-    public static function factory($connection=NULL, $new=FALSE)
+    public static function factory($connection=NULL)
     {
         // carga la conexion por defecto
         if (!$connection) {
             $connection = Config::get('config.application.database');
         }
         
-        //Si no es una conexion nueva y existe la conexion singleton
-        if (! $new && isset(self::$_connections[$connection])) {
+        //Si existe la conexion singleton
+        if (isset(self::$_connections[$connection])) {
             return self::$_connections[$connection];
         }
         
@@ -77,14 +77,10 @@ class DbPool
          
         try {
             // conecta con pdo
-            $pdo = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            self::$_connections[$connection] = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
+            self::$_connections[$connection]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
-            //Si no es para conexion nueva, la cargo en el singleton
-            if (! $new) {
-                self::$_connections[$connection] = $pdo;
-            }
-            return $pdo;
+            return self::$_connections[$connection];
         	
         } catch (PDOException $e) {
             throw new KumbiaException($e->getMessage());
