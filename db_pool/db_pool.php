@@ -70,24 +70,11 @@ class DbPool
         
         $databases = Config::read('databases');
         $config = $databases[$connection];
-
-        // carga los valores por defecto para la conexion
-        if (! isset($config['port'])) {
-            $config['port'] = 0;
-        }
-        if (! isset($config['dsn'])) {
-            $config['dsn'] = '';
-        }
-        if (! isset($config['host'])) {
-            $config['host'] = '';
-        }
-        if (! isset($config['username'])) {
-            $config['username'] = '';
-        }
-        if (! isset($config['password'])) {
-            $config['password'] = '';
-        }
-        
+		
+		// carga los valores por defecto para la conexion
+		$default = array ('port' => 0, 'dsn', 'host', 'username', 'pasword');
+		$config = $config + $default;
+         
         try {
             // conecta con pdo
             $pdo = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
