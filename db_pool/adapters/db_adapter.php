@@ -91,12 +91,11 @@ abstract class DbAdapter
     /**
      * Genera el objeto pdo para la conexion
      *
-     * @param string $new forzar un nuevo objeto pdo y no el del pool de conexiones
      * @return PDO
      **/
-    public function pdo($new=FALSE)
+    public function pdo()
     {
-        return DbPool::factory($this->_connection, $new);
+        return DbPool::factory($this->_connection);
     }
     
     /**
