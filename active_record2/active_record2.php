@@ -36,7 +36,7 @@ require_once CORE_PATH.'libs/ActiveRecord/active_record2/kumbia_model.php';
  * la tabla de la base de datos. Cuando se modifican los atributos del
  * objeto, se actualiza la fila de la base de datos.
  */
-class ActiveRecord2
+class ActiveRecord2 extends KumbiaModel
 {
     /**
      * Conexion a base datos que se utilizara
@@ -64,7 +64,7 @@ class ActiveRecord2
      *
      * @param string|array parametros de busqueda 
      **/
-    public function find($params=null)
+    public function find($params=NULL)
     {
         // nuevo contenedor de consulta
         $dbQuery = new DbQuery();
@@ -86,6 +86,8 @@ class ActiveRecord2
         // obtiene los parametros de consulta indicados
         if(!is_array($params)) {
             $params = Util::getParams(func_get_args());
+            $dbQuery->select($params);
+            return $this->findBySql($dbQuery);
         }
         
     }
@@ -104,8 +106,25 @@ class ActiveRecord2
         if(!is_string($sql)) {
             $sql = $adapter->query($sql);
         }
-        
         // ejecuta la consulta
-        return $adapter->pdo()->query($sql);
+        return $adapter->pdo()->query($sql, PDO::FETCH_LAZY);
+    }
+    /**
+     * Ejecuta una setencia SQL aplicando Prepared Statement
+     * @param string $sql Setencia SQL
+     * @param array $params parametros que seran enlazados al SQL
+     * @param int tipo de Fetch
+     */
+    public function sql($sql, $params=NULL, $fetch=PDO::FETCH_ASSOC) 
+    {
+        // carga el adaptador especifico para la conexion
+        $adapter = DbAdapter::factory($this->_connection);
+        
+        $prepare = $adapter->pdo()->prepare($sql);
+        if($prepare->execute($params)){
+            return $prepare->fetchAll($fetch);
+        }
+        
+        return FALSE;
     }
 }

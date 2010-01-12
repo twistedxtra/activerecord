@@ -60,7 +60,7 @@ abstract class DbAdapter
      * @return DbAdapter
      * @throw KumbiaException
      **/
-    public static function factory($connection=null)
+    public static function factory($connection=NULL)
     {
         // carga la conexion por defecto
         if (!$connection) {
@@ -127,7 +127,7 @@ abstract class DbAdapter
             
         }
         
-        return null;
+        return NULL;
     }
     
     /**

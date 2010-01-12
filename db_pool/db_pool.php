@@ -72,12 +72,12 @@ class DbPool
         $config = $databases[$connection];
 		
 		// carga los valores por defecto para la conexion
-		$default = array ('port' => 0, 'dsn', 'host', 'username', 'pasword');
+		$default = array ('port' => 0, 'dbname', 'host', 'username', 'pasword');
 		$config = $config + $default;
-         
+
         try {
             // conecta con pdo
-            self::$_connections[$connection] = new PDO($config['type'] . ":" . $config['dsn'], $config['username'], $config['password']);
+            self::$_connections[$connection] = new PDO($config['type'] . ':host=' . $config['host'].';dbname='.$config['dbname'], $config['username'], $config['password']);
             self::$_connections[$connection]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
             return self::$_connections[$connection];
