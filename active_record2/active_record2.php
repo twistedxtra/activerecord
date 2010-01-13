@@ -79,14 +79,13 @@ class ActiveRecord2 extends KumbiaModel
     
         // si no se indican parametros de consulta
         if(!$params) {
-            $dbQuery->select();
-            return $this->findBySql($dbQuery);
+            return $this->findBySql($dbQuery->select());
         }
         
         // obtiene los parametros de consulta indicados
         if(!is_array($params)) {
             $params = Util::getParams(func_get_args());
-            $dbQuery->select($params);
+            $dbQuery->select(implode(',',$params));
             return $this->findBySql($dbQuery);
         }
         
@@ -107,7 +106,7 @@ class ActiveRecord2 extends KumbiaModel
             $sql = $adapter->query($sql);
         }
         // ejecuta la consulta
-        return $adapter->pdo()->query($sql, PDO::FETCH_LAZY);
+        return $adapter->pdo()->query($sql, PDO::FETCH_OBJ);
     }
     /**
      * Ejecuta una setencia SQL aplicando Prepared Statement
