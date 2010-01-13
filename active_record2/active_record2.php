@@ -113,9 +113,9 @@ class ActiveRecord2 extends KumbiaModel
      * Ejecuta una setencia SQL aplicando Prepared Statement
      * @param string $sql Setencia SQL
      * @param array $params parametros que seran enlazados al SQL
-     * @param int tipo de Fetch
+     * @param int tipo de Fetch a retornar
      */
-    public function sql($sql, $params=NULL, $fetch=PDO::FETCH_ASSOC) 
+    public function sql($sql, $params=NULL, $fetch=PDO::FETCH_CLASS)
     {
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
