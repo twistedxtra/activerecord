@@ -49,8 +49,27 @@ class DbQuery
      **/
     public function where($conditions) 
     {
-        $this->_sql['where'] = $conditions;
+        $where = array();
+        if(is_array($conditions)){
+            foreach ($conditions as $k => $v) {
+            	$this->_sql['params'][] = $v;
+            	$where[] = $k;
+            }
+        }
+        $this->_sql['where'] = $where;
         return $this;
+    }
+    /**
+     * Parametros que seran enlazados a la setencia SQL
+     * 
+     * @return Array
+     */
+    public function params()
+    {
+        if(isset($this->_sql['params'])){
+            return $this->_sql['params'];
+        }
+        return NULL;
     }
     
     /**
@@ -193,14 +212,22 @@ class DbQuery
      * Construye la consulta SELECT
      *
      * @param string $columns columnas
-     * @return string
+     * @return DbQuery
      **/
     public function select($columns='*') 
     {
         $this->_sql['select'] = $columns;
         return $this;
     }
-    
+    /**
+     * Columnas a utilizar en el Query
+     * @return DbQuery
+     */
+    public function columns($columns)
+    {
+        $this->select($columns);
+        return $this;
+    }
     /**
      * Construye la consulta DELETE
      *
@@ -208,7 +235,7 @@ class DbQuery
      **/
     public function delete() 
     {
-        $this->_sql['delete'] = true;
+        $this->_sql['delete'] = TRUE;
         return $this;
     }
     

@@ -124,7 +124,6 @@ abstract class DbAdapter
             
         } elseif(isset($sqlArray['delete'])) {
             return $this->_delete($sqlArray);
-            
         }
         
         return NULL;
@@ -174,7 +173,8 @@ abstract class DbAdapter
             
             foreach($insert['columns'] as $k => $v) {
                 $columns[] = $k;
-                $values[] = $pdo->quote($v);
+                //$values[] = $pdo->quote($v);
+                $values[] = ":$k";
             }
             
             $columns = implode(', ', $columns);
@@ -290,10 +290,11 @@ abstract class DbAdapter
             
                 // genera la condicion where partiendo de un array
                 $where = array();
-                foreach($sqlArray['where'] as $k => $v) {
-                    $where[] = "$k=" . $pdo->quote($v);
-                }
-                $where = implode(' AND ', $where);
+                /*foreach($sqlArray['where'] as $k) {
+                    //$where[] = "$k=" . $pdo->quote($v);
+                    $where[] = $k;
+                }*/
+                $where = implode(' AND ', $sqlArray['where']);
             } else {
                 $where = $sqlArray['where'];
             }

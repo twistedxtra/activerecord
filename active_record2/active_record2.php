@@ -79,46 +79,47 @@ class ActiveRecord2 extends KumbiaModel
     /**
      * Efectua una busqueda
      *
-     * @param string|array parametros de busqueda 
+     * @param string|array parametros de busqueda
+     * @return ResultSet
      **/
-    public function find ($params = NULL)
+    public function find ()
     {
         if(!$this->_dbQuery){
             // nuevo contenedor de consulta
-            $dbQuery = new DbQuery();
+            $this->_dbQuery = new DbQuery();
+            $this->_dbQuery->select();
         }
         
         // asigna la tabla
-        $dbQuery->table($this->_table);
+        $this->_dbQuery->table($this->_table);
         // asigna el esquema si existe
         if ($this->_schema) {
-            $dbQuery->schema($this->_schema);
+            $this->_dbQuery->schema($this->_schema);
         }
-        // obtiene los parametros de consulta indicados
-        if (! is_array($params)) {
-            $params = Util::getParams(func_get_args());
-            $dbQuery->select(implode(', ', $params));
-            return $this->findBySql($dbQuery);
-        }
+        //var_dump($this->_dbQuery->columns('nombre')); die;
+        return $this->findBySql($this->_dbQuery);
     }
     public function all ()
     {}
     /**
      * Devuelve la instancia para realizar chain
      * 
-     * @return Obj DbQuery
+     * @return DbQuery
      */
     public function get ()
     {
-        return $this->_dbQuery = new DbQuery();
+       $this->_dbQuery = new DbQuery();
+       return $this->_dbQuery->select();
     }
     /**
      * Efectua una busqueda de una consulta sql
      *
      * @param string | DbQuery $sql
+     * @return ResultSet
      **/
     public function findBySql ($sql)
     {
+        $params = $sql->params();
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
         // si no es un string, entonces es DbQuery
@@ -126,7 +127,11 @@ class ActiveRecord2 extends KumbiaModel
             $sql = $adapter->query($sql);
         }
         // ejecuta la consulta
-        return $adapter->pdo()->query($sql, PDO::FETCH_OBJ);
+        $prepare = $adapter->pdo()->prepare($sql);
+        if ($prepare->execute($params)) {
+            return new ResultSet($prepare);
+        }
+        return FALSE;
     }
     /**
      * Ejecuta una setencia SQL aplicando Prepared Statement
@@ -170,4 +175,5 @@ class ActiveRecord2 extends KumbiaModel
         }
         //return FALSE;
     }
+    
 }
