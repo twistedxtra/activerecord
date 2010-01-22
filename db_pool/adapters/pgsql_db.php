@@ -79,7 +79,6 @@ class PgsqlDb extends DbAdapter
                     }
                     //Relaciones
                     if(substr($field->name, strlen($field->name) -3, 3) == '_id'){
-                        //$metadata->setRelation($field->name, $attribute->relation);
                         $attribute->alias =  ucwords(strtr($field->name,'_-','  '));
                     }
                     //tipo de dato

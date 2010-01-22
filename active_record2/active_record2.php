@@ -22,8 +22,11 @@
 /**
  * @see KumbiaModel
  */
-require_once CORE_PATH.'libs/ActiveRecord/active_record2/kumbia_model.php';
- 
+require_once CORE_PATH . 'libs/ActiveRecord/active_record2/kumbia_model.php';
+/**
+ * @see ResultSet
+ */
+require_once CORE_PATH . 'libs/ActiveRecord/db_pool/result_set.php';
 /**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
  *
@@ -44,65 +47,82 @@ class ActiveRecord2 extends KumbiaModel
      * @var strings
      **/
     protected $_connection = null;
-
     /**
      * Tabla origen de datos
      *
      * @var string
-     **/
+     */
     protected $_table = null;
-    
     /**
      * Esquema de datos
      *
      * @var string
-     **/
+     */
     protected $_schema = null;
-
+    /**
+     * Objeto DbQuery para implementar chain
+     * 
+     * @var Obj
+     */
+    protected $_dbQuery = NULL;
+    /**
+     * Constructor de la class
+     */
+    public function __constructor ($data = null)
+    {
+        if (is_array($data)) {
+            foreach ($data as $k => $v) {
+                $this->$k = $v;
+            }
+        }
+    }
     /**
      * Efectua una busqueda
      *
      * @param string|array parametros de busqueda 
      **/
-    public function find($params=NULL)
+    public function find ($params = NULL)
     {
-        // nuevo contenedor de consulta
-        $dbQuery = new DbQuery();
-    
+        if(!$this->_dbQuery){
+            // nuevo contenedor de consulta
+            $dbQuery = new DbQuery();
+        }
+        
         // asigna la tabla
         $dbQuery->table($this->_table);
-        
         // asigna el esquema si existe
-        if($this->_schema) {
+        if ($this->_schema) {
             $dbQuery->schema($this->_schema);
         }
-    
-        // si no se indican parametros de consulta
-        if(!$params) {
-            return $this->findBySql($dbQuery->select());
-        }
-        
         // obtiene los parametros de consulta indicados
-        if(!is_array($params)) {
+        if (! is_array($params)) {
             $params = Util::getParams(func_get_args());
-            $dbQuery->select(implode(',',$params));
+            $dbQuery->select(implode(', ', $params));
             return $this->findBySql($dbQuery);
         }
-        
     }
-    
+    public function all ()
+    {}
+    /**
+     * Devuelve la instancia para realizar chain
+     * 
+     * @return Obj DbQuery
+     */
+    public function get ()
+    {
+        return $this->_dbQuery = new DbQuery();
+    }
     /**
      * Efectua una busqueda de una consulta sql
      *
      * @param string | DbQuery $sql
      **/
-    public function findBySql($sql)
+    public function findBySql ($sql)
     {
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
-    
         // si no es un string, entonces es DbQuery
-        if(!is_string($sql)) {
+        if (! is_string($sql)) {
             $sql = $adapter->query($sql);
         }
         // ejecuta la consulta
@@ -110,20 +130,44 @@ class ActiveRecord2 extends KumbiaModel
     }
     /**
      * Ejecuta una setencia SQL aplicando Prepared Statement
+     * 
      * @param string $sql Setencia SQL
      * @param array $params parametros que seran enlazados al SQL
-     * @param int tipo de Fetch a retornar
+     * @return ResulSet
      */
-    public function sql($sql, $params=NULL, $fetch=PDO::FETCH_CLASS)
+    public function sql ($sql, $params = NULL)
     {
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
-        
         $prepare = $adapter->pdo()->prepare($sql);
-        if($prepare->execute($params)){
-            return $prepare->fetchAll($fetch);
+        if ($prepare->execute($params)) {
+            return new ResultSet($prepare);
         }
-        
         return FALSE;
+    }
+    /**
+     * Realiza un insert sobre la tabla
+     * 
+     * @param array $data información a ser guardada
+     * @return Bool 
+     */
+    public function insert ($data = null)
+    {
+        // nuevo contenedor de consulta
+        $dbQuery = new DbQuery();
+        // asigna la tabla
+        $dbQuery->table($this->_table);
+        // asigna el esquema si existe
+        if ($this->_schema) {
+            $dbQuery->schema($this->_schema);
+        }
+        $dbQuery->insert($data);
+        $adapter = DbAdapter::factory($this->_connection);
+        try {
+            $prepare = $adapter->pdo()->prepare($adapter->query($dbQuery));
+            return $prepare->execute($data);
+        } catch (PDOException $e) {    //echo $prepare->errorCode();die;
+        }
+        //return FALSE;
     }
 }
