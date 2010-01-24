@@ -39,7 +39,7 @@ require_once CORE_PATH . 'libs/ActiveRecord/db_pool/result_set.php';
  * la tabla de la base de datos. Cuando se modifican los atributos del
  * objeto, se actualiza la fila de la base de datos.
  */
-class ActiveRecord2 extends KumbiaModel
+class ActiveRecord2 extends KumbiaModel implements Iterator
 {
     /**
      * Conexion a base datos que se utilizara
@@ -65,6 +65,13 @@ class ActiveRecord2 extends KumbiaModel
      * @var Obj
      */
     protected $_dbQuery = NULL;
+    private $_pointer = 0;
+    /**
+     * ResulSet PDOStatement
+     * 
+     * @var Obj
+     */
+    private $_resultSet = NULL;
     /**
      * Constructor de la class
      */
@@ -96,7 +103,6 @@ class ActiveRecord2 extends KumbiaModel
         if ($this->_schema) {
             $this->_dbQuery->schema($this->_schema);
         }
-        //var_dump($this->_dbQuery->columns('nombre')); die;
         return $this->findBySql($this->_dbQuery);
     }
     public function all ()
@@ -119,7 +125,7 @@ class ActiveRecord2 extends KumbiaModel
      **/
     public function findBySql ($sql)
     {
-        $params = $sql->params();
+        $bind = $sql->getBind();
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
         // si no es un string, entonces es DbQuery
@@ -127,9 +133,9 @@ class ActiveRecord2 extends KumbiaModel
             $sql = $adapter->query($sql);
         }
         // ejecuta la consulta
-        $prepare = $adapter->pdo()->prepare($sql);
-        if ($prepare->execute($params)) {
-            return new ResultSet($prepare);
+        $this->_resultSet = $adapter->pdo()->prepare($sql);
+        if ($this->_resultSet->execute($bind)) {
+            return $this;
         }
         return FALSE;
     }
@@ -144,9 +150,9 @@ class ActiveRecord2 extends KumbiaModel
     {
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
-        $prepare = $adapter->pdo()->prepare($sql);
-        if ($prepare->execute($params)) {
-            return new ResultSet($prepare);
+        $this->_resultSet = $adapter->pdo()->prepare($sql);
+        if ($this->_resultSet->execute($params)) {
+            return $this;
         }
         return FALSE;
     }
@@ -174,6 +180,60 @@ class ActiveRecord2 extends KumbiaModel
         } catch (PDOException $e) {    //echo $prepare->errorCode();die;
         }
         //return FALSE;
+    }
+    /**
+     * Fetch Object
+     * 
+     * @param string Class
+     * @return Array
+     */
+    public function fetchObject ()
+    {
+        $this->_resultSet->setFetchMode(PDO::FETCH_INTO, $this);
+        return $this->_resultSet->fetch();
+    }
+    /**
+     * reset result set pointer 
+     * (implementation required by 'rewind()' method in Iterator interface)
+     */
+    public function rewind ()
+    {
+        $this->_pointer = 0;
+    }
+    /**
+     * get current row set in result set 
+     * (implementation required by 'current()' method in Iterator interface)
+     */
+    public function current ()
+    {
+        if (! $this->valid()) {
+            throw new KumbiaException('Unable to retrieve current row.');
+        }
+        return $this->fetchObject();
+    }
+    /**
+     * Obtiene la posición actual del Puntero 
+     * 
+     */
+    public function key ()
+    {
+        return $this->_pointer;
+    }
+    /**
+     * Mueve el puntero a la siguiente posición 
+     * 
+     */
+    public function next ()
+    {
+        ++ $this->_pointer;
+    }
+    /**
+     * Determina si el puntero del ResultSet es valido 
+     * 
+     */
+    public function valid ()
+    {
+        return $this->_pointer < $this->_resultSet->rowCount();
     }
     
 }

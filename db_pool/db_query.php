@@ -42,32 +42,66 @@ class DbQuery
     }
 
     /**
-     * Clausula WHERE
+     * Clausula WHERE con AND
      *
-     * @param string | array $conditions condiciones
+     * @param array $conditions condiciones AND
      * @return DbQuery
-     **/
-    public function where($conditions) 
+     */
+    public function whereAnd($and) 
     {
         $where = array();
-        if(is_array($conditions)){
-            foreach ($conditions as $k => $v) {
-            	$this->_sql['params'][] = $v;
+        //para consultas AND
+        if(is_array($and)){
+            foreach ($and as $k) {
             	$where[] = $k;
             }
         }
-        $this->_sql['where'] = $where;
+        
+        $this->_sql['where']['and'] = $where;
         return $this;
     }
     /**
-     * Parametros que seran enlazados a la setencia SQL
+     * Clausula WHERE con OR
      * 
-     * @return Array
+     * @param array $or condiciones OR
+     * return DbQuery
      */
-    public function params()
+    public function whereOr($or)
     {
-        if(isset($this->_sql['params'])){
-            return $this->_sql['params'];
+        $where = array();
+        //para consultas OR
+        if(is_array($or)){
+            foreach ($or as $k) {
+                $where[] = $k;
+            }
+        }
+        $this->_sql['where']['or'] = $where;
+        return $this;
+    }
+    /**
+     * Parámetros que seran enlazados a la setencia SQL
+     * 
+     * @return DbQuery
+     */
+    public function bind($bind)
+    {
+        if(!is_array($bind)){
+            throw new KumbiaException('Los parámetros para enlazar a la sentencia SQL debe ser un array');
+        }
+        foreach ($bind as $k => $v) {
+        	$this->_sql['bind'][$k] = $v;
+        }
+        return $this;
+    }
+    /**
+     * Retorna los elementos para ser enlazados
+     * 
+     * @return array
+     */
+    public function getBind()
+    {
+        if(isset($this->_sql['bind'])){
+            return $this->_sql['bind'];
         }
         return NULL;
     }

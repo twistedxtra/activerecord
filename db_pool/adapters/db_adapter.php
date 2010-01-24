@@ -285,16 +285,13 @@ abstract class DbAdapter
 
         if(isset($sqlArray['where'])) {
             if(is_array($sqlArray['where'])) {
-                // obtiene la conexion pdo
-                $pdo = $this->pdo();
-            
-                // genera la condicion where partiendo de un array
-                $where = array();
-                /*foreach($sqlArray['where'] as $k) {
-                    //$where[] = "$k=" . $pdo->quote($v);
-                    $where[] = $k;
-                }*/
-                $where = implode(' AND ', $sqlArray['where']);
+                $where = NULL;
+                if(isset($sqlArray['where']['and'])){
+                    $where = implode(' AND ', $sqlArray['where']['and']);
+                }
+                if(isset($sqlArray['where']['or'])){
+                    $where .= implode(' OR ', $sqlArray['where']['or']);
+                }
             } else {
                 $where = $sqlArray['where'];
             }
