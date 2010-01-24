@@ -44,39 +44,43 @@ class DbQuery
     /**
      * Clausula WHERE con AND
      *
-     * @param array $conditions condiciones AND
+     * @param string $conditions condiciones AND
      * @return DbQuery
      */
-    public function whereAnd($and) 
+    public function where($conditions) 
     {
-        $where = array();
-        //para consultas AND
-        if(is_array($and)){
-            foreach ($and as $k) {
-            	$where[] = $k;
-            }
-        }
-        
-        $this->_sql['where']['and'] = $where;
+        $this->_sql['where'][] = $this->_where($conditions);
         return $this;
     }
     /**
      * Clausula WHERE con OR
      * 
-     * @param array $or condiciones OR
-     * return DbQuery
+     * @param string $conditions condiciones OR
+     * @return DbQuery
      */
-    public function whereOr($or)
+    public function whereOr($conditions)
     {
-        $where = array();
-        //para consultas OR
-        if(is_array($or)){
-            foreach ($or as $k) {
-                $where[] = $k;
+        $this->_sql['where'][] = $this->_where($conditions, FALSE);
+        return $this;
+    }
+    /**
+     * Método interno para crear la Clusula WHERE
+     * 
+     * @param string $conditions
+     * @param bool   $type TRUE = AND; FALSE = OR
+     * @return string clausula
+     */
+    protected function _where($conditions, $type=TRUE)
+    {
+        $cond=NULL;
+        if(isset($this->_sql['where'])){
+            if($type===TRUE){
+                $cond = ' AND ';
+            }else{
+                $cond = ' OR ';
             }
         }
-        $this->_sql['where']['or'] = $where;
-        return $this;
+        return $cond . "($conditions)";
     }
     /**
      * Parámetros que seran enlazados a la setencia SQL

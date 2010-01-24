@@ -286,12 +286,7 @@ abstract class DbAdapter
         if(isset($sqlArray['where'])) {
             if(is_array($sqlArray['where'])) {
                 $where = NULL;
-                if(isset($sqlArray['where']['and'])){
-                    $where = implode(' AND ', $sqlArray['where']['and']);
-                }
-                if(isset($sqlArray['where']['or'])){
-                    $where .= implode(' OR ', $sqlArray['where']['or']);
-                }
+                $where = ' ' .  implode(' ', $sqlArray['where']);                
             } else {
                 $where = $sqlArray['where'];
             }
