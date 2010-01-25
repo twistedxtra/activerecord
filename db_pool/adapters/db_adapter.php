@@ -162,26 +162,12 @@ abstract class DbAdapter
     {
         // alias para manejar mas facil
         $insert = $sqlArray['insert'];
-        
         // si se paso array
-        if(is_array($insert['columns'])) {
-            // obtiene la conexion pdo
-            $pdo = $this->pdo();
-        
-            $columns = array();
-            $values = array();
-            
-            foreach($insert['columns'] as $k => $v) {
-                $columns[] = $k;
-                //$values[] = $pdo->quote($v);
-                $values[] = ":$k";
-            }
-            
-            $columns = implode(', ', $columns);
-            $values = implode(', ', $values);
-        } else {
-            $columns = $insert['columns'];
-            $values = $insert['values'];
+        if(is_array($insert['data'])) {
+            //obtiene las columns
+            $columns = implode(', ', array_keys($insert['data']));
+            //Parámetros enlazados para SQL PS
+            $values = implode(', ', array_keys($sqlArray['bind']));
         }
         
         // verifica si esta definido el eschema
@@ -190,7 +176,6 @@ abstract class DbAdapter
         } else {
             $source = $sqlArray['table'];
         }
-        
         return "INSERT INTO $source ($columns) VALUES ($values)";
     }
     

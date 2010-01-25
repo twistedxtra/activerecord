@@ -24,10 +24,6 @@
  */
 require_once CORE_PATH . 'libs/ActiveRecord/active_record2/kumbia_model.php';
 /**
- * @see ResultSet
- */
-require_once CORE_PATH . 'libs/ActiveRecord/db_pool/result_set.php';
-/**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
  *
  * Active Record es un enfoque al problema de acceder a los datos de una
@@ -86,17 +82,15 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     /**
      * Efectua una busqueda
      *
-     * @param string|array parametros de busqueda
      * @return ResultSet
-     **/
+     */
     public function find ()
     {
-        if(!$this->_dbQuery){
+        if (! $this->_dbQuery) {
             // nuevo contenedor de consulta
             $this->_dbQuery = new DbQuery();
             $this->_dbQuery->select();
         }
-        
         // asigna la tabla
         $this->_dbQuery->table($this->_table);
         // asigna el esquema si existe
@@ -114,8 +108,8 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      */
     public function get ()
     {
-       $this->_dbQuery = new DbQuery();
-       return $this->_dbQuery->select();
+        $this->_dbQuery = new DbQuery();
+        return $this->_dbQuery->select();
     }
     /**
      * Efectua una busqueda de una consulta sql
@@ -162,7 +156,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @param array $data información a ser guardada
      * @return Bool 
      */
-    public function insert ($data = null)
+    public function create ($data = null)
     {
         // nuevo contenedor de consulta
         $dbQuery = new DbQuery();
@@ -172,14 +166,15 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         if ($this->_schema) {
             $dbQuery->schema($this->_schema);
         }
-        $dbQuery->insert($data);
         $adapter = DbAdapter::factory($this->_connection);
         try {
-            $prepare = $adapter->pdo()->prepare($adapter->query($dbQuery));
-            return $prepare->execute($data);
-        } catch (PDOException $e) {    //echo $prepare->errorCode();die;
+            $this->_resultSet = $adapter->pdo()->prepare($adapter->query($dbQuery->insert($data)));
+            $this->_resultSet->execute($dbQuery->getBind());
+            return $this;
+        } catch (PDOException $e) {
+            //aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
+            echo $this->_resultSet->errorCode();
         }
-        //return FALSE;
     }
     /**
      * Fetch Object
@@ -235,5 +230,4 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     {
         return $this->_pointer < $this->_resultSet->rowCount();
     }
-    
 }

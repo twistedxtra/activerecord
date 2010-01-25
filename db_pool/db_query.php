@@ -296,9 +296,16 @@ class DbQuery
      * @param string $values 
      * @return DbQuery
      **/
-    public function insert($columns, $values=null) 
+    public function insert($data) 
     {
-        $this->_sql['insert'] = array('columns' => $columns, 'values' => $values);
+        if(is_array($data)){
+            $bind = array();
+            foreach($data as $k => $v){
+                $bind[':'.$k] = $v;
+            }
+            $this->bind($bind);
+        }
+        $this->_sql['insert'] = array('data' => $data);
         return $this;
     }
     
