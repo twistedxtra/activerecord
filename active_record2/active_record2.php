@@ -19,10 +19,10 @@
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-/**
- * @see KumbiaModel
- */
+ 
+// @see KumbiaModel
 require_once CORE_PATH . 'libs/ActiveRecord/active_record2/kumbia_model.php';
+
 /**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
  *
@@ -43,35 +43,46 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @var strings
      **/
     protected $_connection = null;
+	
     /**
      * Tabla origen de datos
      *
      * @var string
      */
     protected $_table = null;
+	
     /**
      * Esquema de datos
      *
      * @var string
      */
     protected $_schema = null;
+	
     /**
      * Objeto DbQuery para implementar chain
      * 
      * @var Obj
      */
     protected $_dbQuery = NULL;
-    private $_pointer = 0;
+    
+	/**
+	 * Posicion en el iterador
+	 *
+	 * @var int
+	 */
+	private $_pointer = 0;
+	
     /**
      * ResulSet PDOStatement
      * 
      * @var Obj
      */
     private $_resultSet = NULL;
+	
     /**
      * Constructor de la class
      */
-    public function __constructor ($data = null)
+    public function __construct ($data = null)
     {
         if (is_array($data)) {
             foreach ($data as $k => $v) {
@@ -79,6 +90,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             }
         }
     }
+	
     /**
      * Efectua una busqueda
      *
@@ -87,20 +99,14 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     public function find ()
     {
         if (! $this->_dbQuery) {
-            // nuevo contenedor de consulta
-            $this->_dbQuery = new DbQuery();
-            $this->_dbQuery->select();
-        }
-        // asigna la tabla
-        $this->_dbQuery->table($this->_table);
-        // asigna el esquema si existe
-        if ($this->_schema) {
-            $this->_dbQuery->schema($this->_schema);
+            $this->get();
         }
         return $this->findBySql($this->_dbQuery);
     }
+	
     public function all ()
     {}
+	
     /**
      * Devuelve la instancia para realizar chain
      * 
@@ -108,9 +114,20 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      */
     public function get ()
     {
+		// crea la instancia de DbQuery
         $this->_dbQuery = new DbQuery();
+		
+        // asigna la tabla
+        $this->_dbQuery->table($this->_table);
+		
+        // asigna el esquema si existe
+        if ($this->_schema) {
+            $this->_dbQuery->schema($this->_schema);
+        }
+		
         return $this->_dbQuery->select();
     }
+	
     /**
      * Efectua una busqueda de una consulta sql
      *
@@ -126,6 +143,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         if (! is_string($sql)) {
             $sql = $adapter->query($sql);
         }
+		
         // ejecuta la consulta
         $this->_resultSet = $adapter->pdo()->prepare($sql);
         if ($this->_resultSet->execute($bind)) {
@@ -133,6 +151,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         }
         return FALSE;
     }
+	
     /**
      * Ejecuta una setencia SQL aplicando Prepared Statement
      * 
@@ -150,13 +169,14 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         }
         return FALSE;
     }
+	
     /**
      * Realiza un insert sobre la tabla
      * 
      * @param array $data información a ser guardada
      * @return Bool 
      */
-    public function create ($data = null)
+    public function create ($data = NULL)
     {
         // nuevo contenedor de consulta
         $dbQuery = new DbQuery();
@@ -176,6 +196,52 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             echo $this->_resultSet->errorCode();
         }
     }
+	
+	/**
+     * Realiza un update sobre la tabla
+     * 
+     * @param array $data información a ser guardada
+     * @return Bool
+     */
+    public function updateAll ($data)
+    {
+        if (! $this->_dbQuery) {
+            $this->get();
+        }
+		
+        $adapter = DbAdapter::factory($this->_connection);
+        try {
+            $this->_resultSet = $adapter->pdo()->prepare($adapter->query($this->_dbQuery->update($data)));
+            $this->_resultSet->execute($this->_dbQuery->getBind());
+            return $this;
+        } catch (PDOException $e) {
+            //aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
+            echo $this->_resultSet->errorCode();
+        }
+    }
+	
+	/**
+     * Realiza un delete sobre la tabla
+     * 
+     * @return Bool
+     */
+    public function deleteAll ()
+    {
+        if (! $this->_dbQuery) {
+            $this->get();
+        }
+		
+        $adapter = DbAdapter::factory($this->_connection);
+        try {
+            $this->_resultSet = $adapter->pdo()->prepare($adapter->query($this->_dbQuery->delete()));
+            $this->_resultSet->execute($this->_dbQuery->getBind());
+            return $this;
+        } catch (PDOException $e) {
+            //aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
+            echo $this->_resultSet->errorCode();
+        }
+    }
+	
     /**
      * Fetch Object
      * 
@@ -187,6 +253,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         $this->_resultSet->setFetchMode(PDO::FETCH_INTO, $this);
         return $this->_resultSet->fetch();
     }
+	
     /**
      * reset result set pointer 
      * (implementation required by 'rewind()' method in Iterator interface)
@@ -195,6 +262,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     {
         $this->_pointer = 0;
     }
+	
     /**
      * get current row set in result set 
      * (implementation required by 'current()' method in Iterator interface)
@@ -206,6 +274,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         }
         return $this->fetchObject();
     }
+	
     /**
      * Obtiene la posición actual del Puntero 
      * 
@@ -214,6 +283,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     {
         return $this->_pointer;
     }
+	
     /**
      * Mueve el puntero a la siguiente posición 
      * 
@@ -222,6 +292,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     {
         ++ $this->_pointer;
     }
+	
     /**
      * Determina si el puntero del ResultSet es valido 
      * 

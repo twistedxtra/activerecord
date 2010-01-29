@@ -85,13 +85,11 @@ class DbQuery
     /**
      * Parámetros que seran enlazados a la setencia SQL
      * 
+     * @param array $bind
      * @return DbQuery
      */
     public function bind($bind)
     {
-        if(!is_array($bind)){
-            throw new KumbiaException('Los parámetros para enlazar a la sentencia SQL debe ser un array');
-        }
         foreach ($bind as $k => $v) {
         	$this->_sql['bind'][$k] = $v;
         }
@@ -252,19 +250,21 @@ class DbQuery
      * @param string $columns columnas
      * @return DbQuery
      **/
-    public function select($columns='*') 
+    public function select($columns = '*') 
     {
-        $this->_sql['select'] = $columns;
+        $this->_sql['command'] = 'select';
+		$this->_sql['columns'] = $columns;
         return $this;
     }
     /**
      * Columnas a utilizar en el Query
+	 *
+	 * @param string $columns columnas
      * @return DbQuery
      */
     public function columns($columns)
     {
-        $this->select($columns);
-        return $this;
+        return $this->select($columns);
     }
     /**
      * Construye la consulta DELETE
@@ -273,39 +273,49 @@ class DbQuery
      **/
     public function delete() 
     {
-        $this->_sql['delete'] = TRUE;
+        $this->_sql['command'] = 'delete';
         return $this;
+    }
+    
+    /**
+     * Enlaza los datos que llegan por array para usar con insert y update
+     *
+     * @param array $data claves/valores
+     **/
+    protected function _bindData($data)
+    {
+        $bind = array();
+        foreach($data as $k => $v){
+            $bind[':'.$k] = $v;
+        }
+        $this->bind($bind);
+		
+		$this->_sql['data'] = $data;
     }
     
     /**
      * Construye la consulta UPDATE
      *
-     * @param string | array $values claves/valores
+     * @param array $data claves/valores
      * @return DbQuery
      **/
-    public function update($values) 
+    public function update($data) 
     {
-        $this->_sql['update'] = $values;
+        $this->_bindData($data);
+		$this->_sql['command'] = 'update';
         return $this;
     }
     
     /**
      * Construye la consulta UPDATE
      *
-     * @param string | array $columns columnas, o array de claves/valores
-     * @param string $values 
+     * @param string | array $data columnas, o array de claves/valores
      * @return DbQuery
      **/
     public function insert($data) 
     {
-        if(is_array($data)){
-            $bind = array();
-            foreach($data as $k => $v){
-                $bind[':'.$k] = $v;
-            }
-            $this->bind($bind);
-        }
-        $this->_sql['insert'] = array('data' => $data);
+        $this->_bindData($data);
+		$this->_sql['command'] = 'insert';
         return $this;
     }
     

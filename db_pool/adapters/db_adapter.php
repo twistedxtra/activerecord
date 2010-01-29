@@ -112,18 +112,9 @@ abstract class DbAdapter
         if(!isset($sqlArray['table'])) {
             throw new KumbiaException("Debe indicar una tabla para efectuar la consulta");
         }
-        
-        if(isset($sqlArray['select'])) {
-            return $this->_select($sqlArray);
-            
-        } elseif(isset($sqlArray['insert'])) {
-            return $this->_insert($sqlArray);
-            
-        } elseif(isset($sqlArray['update'])) {
-            return $this->_update($sqlArray);
-            
-        } elseif(isset($sqlArray['delete'])) {
-            return $this->_delete($sqlArray);
+		
+        if(isset($sqlArray['command'])) {
+            return $this->{"_{$sqlArray['command']}"}($sqlArray);            
         }
         
         return NULL;
@@ -149,7 +140,7 @@ abstract class DbAdapter
             $select .= ' DISTINCT';
         }
         
-        return $this->_joinClausules($sqlArray, "$select {$sqlArray['select']} FROM $source");
+        return $this->_joinClausules($sqlArray, "$select {$sqlArray['columns']} FROM $source");
     }
     
     /**
@@ -160,15 +151,10 @@ abstract class DbAdapter
      **/
     protected function _insert($sqlArray)
     {
-        // alias para manejar mas facil
-        $insert = $sqlArray['insert'];
-        // si se paso array
-        if(is_array($insert['data'])) {
-            //obtiene las columns
-            $columns = implode(', ', array_keys($insert['data']));
-            //Parámetros enlazados para SQL PS
-            $values = implode(', ', array_keys($sqlArray['bind']));
-        }
+        //obtiene las columns
+        $columns = implode(', ', array_keys($sqlArray['data']));
+        //Parámetros enlazados para SQL PS
+        $values = implode(', ', array_keys($sqlArray['bind']));
         
         // verifica si esta definido el eschema
         if(isset($sqlArray['schema'])) {
@@ -187,21 +173,12 @@ abstract class DbAdapter
      **/
     protected function _update($sqlArray)
     {
-        // si se paso array
-        if(is_array($sqlArray['update'])) {
-            // obtiene la conexion pdo
-            $pdo = $this->pdo();
-            
-            $values = array();
-            
-            foreach($sqlArray['update'] as $k => $v) {
-                $values[] = "$k=" . $pdo->quote($v);
-            }
-            
-            $values = implode(', ', $values);
-        } else {
-            $values = $sqlArray['update'];
+		// construte la pareja clave, valor para SQL PS
+        $values = array();
+        foreach(array_keys($sqlArray['data']) as $k) {
+            $values[] = "$k = :$k";
         }
+        $values = implode(', ', $values);
         
         // verifica si esta definido el eschema
         if(isset($sqlArray['schema'])) {
