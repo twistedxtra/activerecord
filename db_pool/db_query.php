@@ -91,7 +91,7 @@ class DbQuery
     public function bind($bind)
     {
         foreach ($bind as $k => $v) {
-        	$this->_sql['bind'][$k] = $v;
+        	$this->_sql['bind'][":$k"] = $v;
         }
         return $this;
     }
@@ -276,23 +276,7 @@ class DbQuery
         $this->_sql['command'] = 'delete';
         return $this;
     }
-    
-    /**
-     * Enlaza los datos que llegan por array para usar con insert y update
-     *
-     * @param array $data claves/valores
-     **/
-    protected function _bindData($data)
-    {
-        $bind = array();
-        foreach($data as $k => $v){
-            $bind[':'.$k] = $v;
-        }
-        $this->bind($bind);
-		
-		$this->_sql['data'] = $data;
-    }
-    
+
     /**
      * Construye la consulta UPDATE
      *
@@ -301,7 +285,8 @@ class DbQuery
      **/
     public function update($data) 
     {
-        $this->_bindData($data);
+        $this->bind($data);
+        $this->_sql['data'] = $data;
 		$this->_sql['command'] = 'update';
         return $this;
     }
@@ -314,7 +299,8 @@ class DbQuery
      **/
     public function insert($data) 
     {
-        $this->_bindData($data);
+        $this->bind($data);
+        $this->_sql['data'] = $data;
 		$this->_sql['command'] = 'insert';
         return $this;
     }
