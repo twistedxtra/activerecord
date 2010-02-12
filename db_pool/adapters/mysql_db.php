@@ -31,24 +31,59 @@ class MysqlDb extends DbAdapter
      **/
     public function describe($table, $schema=null)
     {
-        if($schema) {
-            $source = "$schema.$table";
-        } else {
-            $source = $table;
-        }
-        
-        $tableMetaData = TableMetaData::getInstance($this->_connection, $schema, $table);
-        if(!$tableMetaData->isLoaded()) {
-            $stmt = $this->pdo()->query("DESCRIBE $source");
+        try {
+            $results = $this->pdo()->query("DESCRIBE $table");
             
-            $metadata = array();
-            foreach($stmt as $row) {
-                // aqui falta el codigo para ajustarlo que funcione con el mysql
+            if ($results) {
+                require_once CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
+                $metadata = new Metadata();
+                while ($field = $results->fetchObject()) {
+                    //Nombre del Campo
+                    $attribute = $metadata->attribute($field->Field);
+                    //alias
+                    $attribute->alias =  ucwords(strtr($field->Field,'_-','  '));
+                    
+                    // autoincremental
+                    if ($field->Extra === 'auto_increment') {
+                        $attribute->autoIncrement = TRUE;
+                    }
+                    
+                    // valor por defecto
+                    $attribute->default = $field->Default;
+                    
+                    //puede ser null?
+                    if($field->Null == 'NO'){
+                        $attribute->notNull = FALSE;
+                    }
+ 
+                    //tipo de dato y longitud
+                    if(preg_match('/^(\w+)\((\w+)\)$/', $field->Type, $matches)) {
+                        $attribute->type = $matches[1];
+                        $attribute->length = $matches[2];
+                    } else {
+                        $attribute->type = $field->Type;
+                        $attribute->length = NULL;
+                    }
+
+                    //indices
+                    switch ($field->Key){
+                        case 'PRI':
+                            $metadata->setPK($field->Key);
+                            $attribute->PK = TRUE;
+                            break;
+                        case 'FK':
+                            $metadata->setFK($field->Key);
+                            $attribute->FK = TRUE;
+                            break;
+                        case 'UNI':
+                            $attribute->unique = TRUE;
+                            break;
+                    }
+                }
             }
-            
-            $tableMetaData->setMetadata($metadata);
+        } catch (PDOException $e) {
+            throw new KumbiaException($e->getMessage());
         }
-        
-        return $tableMetaData;
+        return $metadata;
     }
 }
