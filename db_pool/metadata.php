@@ -127,4 +127,15 @@ class Metadata
     {
         return $this->_FK;
     }
+	
+	/**
+	 * Verifica que sea un atributo valido
+	 * 
+	 * @param string $attribute
+	 * @return boolean
+	 */
+	public function isAttribute($attribute)
+	{
+		return isset($this->_attributes[$attribute]);
+	}
 }
