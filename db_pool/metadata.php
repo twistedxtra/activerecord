@@ -26,11 +26,18 @@ require_once CORE_PATH . 'libs/ActiveRecord/db_pool/attribute.php';
 class Metadata
 {
     /**
-     * Atributos de modelo
+     * Atributos de modelo (metadata)
      *
      * @var array
      **/
     private $_attributes = array();
+ 
+	/**
+	 * Lista de atributos
+	 * 
+	 * @var array 
+	 */
+	private $_attributesList = array();
     
     /**
      * Clave primaria
@@ -56,9 +63,11 @@ class Metadata
     {
         if (! isset($this->_attributes[$attribute])) {
             $this->_attributes[$attribute] = new Attribute();
+			$this->_attributesList[] = $attribute;
         }
         return $this->_attributes[$attribute];
     }
+	
     /**
      * Obtiene los atributos
      *
@@ -69,6 +78,16 @@ class Metadata
         return $this->_attributes;
     }
     
+    /**
+     * Obtiene la lista de atributos
+     *
+     * @return array
+     */
+    public function getAttributesList()
+    {
+        return $this->_attributesList;
+    }
+	
     /**
      * Asigna la clave primaria
      *
