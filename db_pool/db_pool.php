@@ -72,7 +72,7 @@ class DbPool
         $config = $databases[$connection];
 		
 		// carga los valores por defecto para la conexion
-		$default = array ('port' => 0, 'dbname' => NULL, 'host' => 'localhost', 'username' => NULL, 'pasword' => NULL);
+		$default = array ('port' => 0, 'dbname' => NULL, 'host' => 'localhost', 'username' => NULL, 'password' => NULL);
 		$config = $config + $default;
 
         try {
