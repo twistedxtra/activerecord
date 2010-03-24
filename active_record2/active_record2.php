@@ -41,7 +41,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * Conexion a base datos que se utilizara
      *
      * @var strings
-     **/
+     */
     protected $_connection = null;
 	
     /**
@@ -132,21 +132,23 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * Efectua una busqueda de una consulta sql
      *
      * @param string | DbQuery $sql
+	 * @param array $params parametros que seran enlazados al SQL
      * @return ResultSet
-     **/
-    public function findBySql ($sql)
+     */
+    public function findBySql ($sql, $params = NULL)
     {
-        $bind = $sql->getBind();
         // carga el adaptador especifico para la conexion
         $adapter = DbAdapter::factory($this->_connection);
+		
         // si no es un string, entonces es DbQuery
         if (! is_string($sql)) {
             $sql = $adapter->query($sql);
+			$params = $sql->getBind();
         }
 		
         // ejecuta la consulta
         $this->_resultSet = $adapter->pdo()->prepare($sql);
-        if ($this->_resultSet->execute($bind)) {
+        if ($this->_resultSet->execute($params)) {
             return $this;
         }
         return FALSE;
