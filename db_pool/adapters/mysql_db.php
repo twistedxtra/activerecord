@@ -33,7 +33,7 @@ class MysqlDb extends DbAdapter
     {
         try {
             $results = $this->pdo()->query("DESCRIBE $table");
-            
+			
             if ($results) {
                 require_once CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
                 $metadata = new Metadata();
@@ -68,11 +68,11 @@ class MysqlDb extends DbAdapter
                     //indices
                     switch ($field->Key){
                         case 'PRI':
-                            $metadata->setPK($field->Key);
+                            $metadata->setPK($field->Field);
                             $attribute->PK = TRUE;
                             break;
                         case 'FK':
-                            $metadata->setFK($field->Key);
+                            $metadata->setFK($field->Field);
                             $attribute->FK = TRUE;
                             break;
                         case 'UNI':

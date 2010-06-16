@@ -52,7 +52,7 @@ class PgsqlDb extends DbAdapter
                 WHERE c.table_catalog = :database AND c.table_schema = :schema AND c.table_name = :table
                 ORDER BY c.ordinal_position";
         try {
-            $prepare = $this->pdo()->prepare($sql);
+            $prepare = $this->prepare($sql);
             //ejecutando la consulta preparada
             $results = $prepare->execute(array('database'=>'test', 'schema'=>'public', 'table'=>'prueba'));
             if ($results) {

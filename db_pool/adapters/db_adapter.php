@@ -22,7 +22,7 @@
 
 /**
  * @see TableMetadata
- **/
+ */
 //require CORE_PATH . 'libs/ActiveRecord/db_pool/table_meta_data.php';
 
 abstract class DbAdapter
@@ -31,7 +31,7 @@ abstract class DbAdapter
      * Nombre de conexion
      *
      * @var string
-     **/
+     */
     protected $_connection;
     
     /**
@@ -40,14 +40,14 @@ abstract class DbAdapter
      * @param string $table tabla
      * @param string $schema schema
      * @return array
-     **/
+     */
     abstract public function describe($table, $schema=NULL);
 
     /**
      * Constructor
      *
      * @param string $connection nombre de conexion en databases.ini
-     **/
+     */
     public function __construct($connection)
     {
         $this->_connection = $connection;
@@ -59,7 +59,7 @@ abstract class DbAdapter
      * @param string $connection conexion a base de datos en databases.ini
      * @return DbAdapter
      * @throw KumbiaException
-     **/
+     */
     public static function factory($connection=NULL)
     {
         // carga la conexion por defecto
@@ -87,23 +87,14 @@ abstract class DbAdapter
         
         return new $Class($connection);
     }
-    
-    /**
-     * Genera el objeto pdo para la conexion
-     *
-     * @return PDO
-     **/
-    public function pdo()
-    {
-        return DbPool::factory($this->_connection);
-    }
-    
+       
     /**
      * Genera la consulta sql concreta
      *
      * @param DbQuery $dbQuery
      * @return string
-     **/
+	 * @throw KumbiaException
+     */
     public function query($dbQuery)
     {
         $sqlArray = $dbQuery->getSqlArray();
@@ -117,7 +108,7 @@ abstract class DbAdapter
             return $this->{"_{$sqlArray['command']}"}($sqlArray);            
         }
         
-        return NULL;
+        throw new KumbiaException("Debe indicar un comando de consulta SQL");
     }
     
     /**
@@ -125,10 +116,10 @@ abstract class DbAdapter
      *
      * @param array $sqlArray
      * @return string
-     **/
+     */
     protected function _select($sqlArray)
     {
-        // verifica si esta definido el eschema
+        // Verifica si esta definido el esquema
         if(isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
@@ -140,7 +131,10 @@ abstract class DbAdapter
             $select .= ' DISTINCT';
         }
         
-        return $this->_joinClausules($sqlArray, "$select {$sqlArray['columns']} FROM $source");
+		// Columnas en consulta
+		$columns = isset($sqlArray['columns']) ? $sqlArray['columns']: '*';
+		
+        return $this->_joinClausules($sqlArray, "$select $columns FROM $source");
     }
     
     /**
@@ -148,7 +142,7 @@ abstract class DbAdapter
      *
      * @param array $sqlArray
      * @return string
-     **/
+     */
     protected function _insert($sqlArray)
     {
         //obtiene las columns
@@ -170,10 +164,10 @@ abstract class DbAdapter
      *
      * @param array $sqlArray
      * @return string
-     **/
+     */
     protected function _update($sqlArray)
     {
-		// construte la pareja clave, valor para SQL PS
+		// Construte la pareja clave, valor para SQL PS
         $values = array();
         foreach(array_keys($sqlArray['data']) as $k) {
             $values[] = "$k = :$k";
@@ -195,7 +189,7 @@ abstract class DbAdapter
      *
      * @param array $sqlArray
      * @return string
-     **/
+     */
     protected function _delete($sqlArray)
     {
         // verifica si esta definido el eschema
@@ -214,7 +208,7 @@ abstract class DbAdapter
      * @param array $sqlArray array de condiciones
      * @param string $sql consulta sql donde se unira las clausulas
      * @return string
-     **/
+     */
     protected function _joinClausules($sqlArray, $sql)
     {
         // para inner join
@@ -277,4 +271,38 @@ abstract class DbAdapter
         
         return $sql;
     }
+	
+	/**
+     * Genera el objeto PDO para la conexion
+     *
+     * @return PDO
+     */
+    public function pdo()
+    {
+        return DbPool::factory($this->_connection);
+    }
+	
+	/**
+	 * Prepara la consulta SQL
+	 * 
+	 * @param string $sql
+	 * @return PDOStatement
+	 */
+	public function prepare($sql)
+	{
+		// PDOStatement
+		return $this->pdo()->prepare($sql);
+	}
+	
+	/**
+	 * Prepara la consulta SQL asociada al objeto dbQuery
+	 * 
+	 * @param DbQuery objeto de consulta
+	 * @return PDOStatement
+	 */
+	public function prepareDbQuery($dbQuery)
+	{
+		// Prepara el dbQuery
+		return $this->pdo()->prepare($this->query($dbQuery));
+	}
 }
