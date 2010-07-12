@@ -41,40 +41,40 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 * Obtener datos cargados en objeto del Modelo
 	 * 
 	 */
-	const FETCH_MODEL = 1;
+	const FETCH_MODEL = 'model';
 	
 	/**
 	 * Obtener datos cargados en objeto
 	 * 
 	 */
-	const FETCH_OBJ = 2;
+	const FETCH_OBJ = 'obj';
 	
 	/**
 	 * Obtener datos cargados en array
 	 * 
 	 */
-	const FETCH_ARRAY = 3;
+	const FETCH_ARRAY = 'array';
 		
     /**
      * Conexion a base datos que se utilizara
      *
      * @var strings
      */
-    protected $_connection = null;
+    protected $_connection = NULL;
 	
     /**
      * Tabla origen de datos
      *
      * @var string
      */
-    protected $_table = null;
+    protected $_table = NULL;
 	
     /**
      * Esquema de datos
      *
      * @var string
      */
-    protected $_schema = null;
+    protected $_schema = NULL;
 	
     /**
      * Objeto DbQuery para implementar chain
@@ -95,7 +95,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * 
      * @var PDOStatement
      */
-    private $_resultSet = NULL;
+    protected $_resultSet = NULL;
 	
 	/**
 	 * Modo de obtener datos
@@ -108,10 +108,10 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * Constructor de la class
 	 * 
      */
-    public function __construct ($data = null)
+    public function __construct ($data = NULL)
     {
         if (is_array($data)) {
-            $this->_dump($data);
+            $this->dump($data);
         }
     }
 	
@@ -120,12 +120,28 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 * 
 	 * @param array $data
 	 */
-	protected function _dump($data)
+	public function dump($data)
 	{
 		foreach ($data as $k => $v) {
 			$this->$k = $v;
 		}
 	}
+	
+	/**
+	 * Callback antes de crear
+	 * 
+	 * @return boolean
+	 */
+	protected function _beforeCreate()
+	{}
+	
+	/**
+	 * Callback despues de crear
+	 * 
+	 * @return boolean
+	 */
+	protected function _afterCreate()
+	{}
 	
 	/**
 	 * Modo de obtener datos 
@@ -191,11 +207,17 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 * Indica el modo de obtener datos al ResultSet actual
 	 * 
 	 */
-	protected function _fetchMode()
+	protected function _fetchMode($fetchMode = NULL)
 	{
-		switch ($this->_fetchMode) {
+		// Si no se especifica toma el por defecto
+		if(!$fetchMode) {
+			$fetchMode = $this->_fetchMode;
+		}
+		
+		switch ($fetchMode) {
 			// Obtener instancias del mismo modelo
 			case self::FETCH_MODEL:
+				// Instancias de un nuevo modelo, por lo tanto libre de los atributos de la instancia actual
 				$this->_resultSet->setFetchMode(PDO::FETCH_INTO, new self());
 				break;
 				
@@ -261,14 +283,37 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		return $this->_schema;	
 	}
 	
+	/**
+	 * Asigna la conexion
+	 * 
+	 * @param string $conn
+	 * @return ActiveRecord
+	 */
+	public function setConnection($conn)
+	{
+		$this->_connection = $conn;
+		return $this;
+	}
+	
+	/**
+	 * Obtiene la conexion
+	 * 
+	 * @return string
+	 */
+	public function getConnection()
+	{
+		return $this->_connection;	
+	}
+	
     /**
      * Ejecuta una setencia SQL aplicando Prepared Statement
      * 
      * @param string $sql Setencia SQL
      * @param array $params parametros que seran enlazados al SQL
+	 * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function sql ($sql, $params = NULL)
+    public function sql ($sql, $params = NULL, $fetchMode = NULL)
     {
 		// Obtiene una instancia del adaptador
 		$adapter = DbAdapter::factory($this->_connection);
@@ -278,7 +323,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             $this->_resultSet = $adapter->prepare($sql);
 			
 			// Indica el modo de obtener los datos en el ResultSet
-			$this->_fetchMode();
+			$this->_fetchMode($fetchMode);
 			
 			// Ejecuta la consulta
             $this->_resultSet->execute($params);
@@ -295,9 +340,10 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * Ejecuta una consulta de dbQuery
      * 
      * @param DbQuery $dbQuery Objeto de consulta
+	 * @param string $fetchMode
      * @return ActiveRecord
      */
-	public function query($dbQuery) 
+	public function query($dbQuery, $fetchMode = NULL) 
 	{        
         $dbQuery->table($this->getTable());
 		
@@ -314,7 +360,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             $this->_resultSet = $adapter->prepareDbQuery($dbQuery);
 			
 			// Indica el modo de obtener los datos en el ResultSet
-			$this->_fetchMode();
+			$this->_fetchMode($fetchMode);
 			
 			// Ejecuta la consulta
             $this->_resultSet->execute($dbQuery->getBind());
@@ -341,39 +387,42 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     /**
      * Efectua una busqueda
      *
+	 * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function find ()
+    public function find ($fetchMode = NULL)
     {
         if (! $this->_dbQuery) {
             $this->get();
         }
-        return $this->query($this->_dbQuery->select());
+        return $this->query($this->_dbQuery->select(), $fetchMode);
     }
 	
 	/**
 	 * Obtiene un array con los items resultantes de la busqueda
 	 * 
+	 * @param string $fetchMode
 	 * @return array
 	 */
-    public function all ()
+    public function all ($fetchMode = NULL)
     {
-		return $this->find()->_resultSet->fetchAll();
+		return $this->find($fetchMode)->_resultSet->fetchAll();
 	}
 	
 	/**
 	 * Obtiene el primer elemento de la busqueda
 	 * 
+	 * @param string $fetchMode
 	 * @return ActiveRecord
 	 */
-    public function first ()
+    public function first ($fetchMode = NULL)
     {
         if (! $this->_dbQuery) {
             $this->get();
         }
 		
 		// Realiza la busqueda y retorna el objeto ActiveRecord
-		return $this->query($this->_dbQuery->select()->limit(1)->offset(0))->_resultSet->fetch();
+		return $this->query($this->_dbQuery->select()->limit(1)->offset(0), $fetchMode)->_resultSet->fetch();
 	}
 		
 	/**
@@ -381,12 +430,13 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 * 
 	 * @param string $column columna de busqueda
 	 * @param string $value valor para la busqueda
+	 * @param string $fetchMode
 	 * @return ActiveRecord
 	 */
-	public function findBy($column, $value)
+	public function findBy($column, $value, $fetchMode = NULL)
 	{
 		$this->get()->where("$column = :value")->bind(array('value' => $value));
-		return $this->first();
+		return $this->first($fetchMode);
 	}
 		
 	/**
@@ -394,26 +444,58 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 * 
 	 * @param string $column columna de busqueda
 	 * @param string $value valor para la busqueda
+	 * @param string $fetchMode
 	 * @return ActiveRecord
 	 */
-	public function findAllBy($column, $value)
+	public function findAllBy($column, $value, $fetchMode = NULL)
 	{
 		$this->get()->where("$column = :value")->bind(array('value' => $value));
-		return $this->find();
+		return $this->find($fetchMode);
 	}
 	
 	/**
 	 * Buscar por medio de la clave primaria
 	 * 
 	 * @param string $value
+	 * @param string $fetchMode
+	 * @return ActiveRecord
 	 */
-	public function findByPK($value)
+	public function findByPK($value, $fetchMode = NULL)
 	{
-		// Obtiene una instancia del adaptador
-		$adapter = DbAdapter::factory($this->_connection);
-		$metadata = $adapter->describe($this->getTable(), $this->_schema);
+		// Obtiene la metadata
+		$metadata = DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema);
 		
-		return $this->findBy($metadata->getPK(), $value);
+		return $this->findBy($metadata->getPK(), $value, $fetchMode);
+	}
+	
+	/**
+	 * Obtiene un array de los atributos que corresponden a columnas
+	 * en la tabla
+	 * 
+	 * @return array
+	 */
+	private function _getTableValues()
+	{
+		// Obtiene la metadata
+		$metadata = DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema);
+		
+		// TODO: Falta el caso de la clave primaria autogenerada y completar con NULL cuando la propiedad no existe
+		
+		$data = array();
+		// Itera en cada atributo
+		foreach($metadata->getAttributesList() as $attr) {
+			if(property_exists($this, $attr)) {
+				if($this->$attr === '') {
+					$data[$attr] = NULL;
+				} else {
+					$data[$attr] = $this->$attr;
+				}
+			} else {
+				$data[$attr] = NULL;
+			}
+		}
+		
+		return $data;
 	}
 	
     /**
@@ -423,12 +505,36 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @return Bool 
      */
     public function create ($data = NULL)
-    {
-        // Nuevo contenedor de consulta
+    {		
+		// Si es un array, se cargan los atributos en el objeto
+        if (is_array($data)) {
+            $this->dump($data);
+        }
+		
+		// Callback antes de crear
+		if($this->_beforeCreate() === FALSE) {
+			return FALSE;
+		}
+		
+		// @see ActiveRecordValidator
+		require_once CORE_PATH . 'libs/ActiveRecord/active_record2/active_record_validator.php';
+		
+		// Ejecuta la validacion
+		if(ActiveRecordValidator::validateOnCreate($this) === FALSE) {
+			return FALSE;
+		}
+		
+		// Nuevo contenedor de consulta
         $dbQuery = new DbQuery();
 		
 		// Ejecuta la consulta
-		return $this->query($dbQuery->insert($data));
+		if($this->query($dbQuery->insert($this->_getTableValues()))) {
+			// Callback despues de crear
+			$this->_afterCreate();
+			return TRUE;
+		}
+		
+		return FALSE;
     }
 	
 	/**
@@ -461,4 +567,60 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		// Ejecuta la consulta
 		return $this->query($this->_dbQuery->delete());
     }
+	
+	/**
+	 * Validadores
+	 * 
+	 * @return array
+	 */
+	public function validators()
+	{}
+	
+	/**
+	 * Cuenta las apariciones de filas
+	 * 
+	 * @param string $column
+	 * @return integer
+	 */ 
+	public function count($column = '*')
+	{
+        if (! $this->_dbQuery) {
+            $this->get();
+        }
+		
+		$this->_dbQuery->columns("COUNT($column) AS n");
+		return $this->first(self::FETCH_OBJ)->n;
+	}
+	
+	/**
+	 * Verifica si existe al menos una fila con las condiciones indicadas
+	 * 
+	 * @return boolean
+	 */ 
+	public function existsOne()
+	{
+        return $this->count() > 0;
+	}
+	
+	/**
+	 * Verifica si esta persistente en la BD el objeto actual en la bd
+	 * 
+	 * @return boolean
+	 */
+	public function exists()
+	{
+		// Obtiene la clave primaria
+		$metadata = DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema);
+		$pk = $metadata->getPK();
+		
+		// Si no esta definido valor para clave primaria
+		if(!isset($this->$pk) || !$this->$pk) {
+			return FALSE;
+		}
+		
+		// Establece la condicion de busqueda por clave primaria
+		$this->get()->where("$pk = :$pk")->bind(array($pk => $this->$pk));
+		
+		return $this->existsOne();
+	}
 }
