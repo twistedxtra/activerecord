@@ -27,6 +27,13 @@
 
 abstract class DbAdapter
 {
+	/**
+	 * Instancias de adaptadores por conexion
+	 * 
+	 * @var array
+	 */
+	private static $_adapters = array();
+	
     /**
      * Nombre de conexion
      *
@@ -54,38 +61,45 @@ abstract class DbAdapter
     }
 
     /**
-     * Obtiene instancia de query en funcion de la conexion
+     * Obtiene instancia de adaptador en funcion de la conexion (utiliza Singleton)
      *
      * @param string $connection conexion a base de datos en databases.ini
      * @return DbAdapter
      * @throw KumbiaException
      */
-    public static function factory($connection=NULL)
+    public static function factory($connection = NULL)
     {
-        // carga la conexion por defecto
+        // Carga la conexion por defecto
         if (!$connection) {
             $connection = Config::get('config.application.database');
         }
     
-        // lee la configuracion de base de datos
-        $databases = Config::read('databases');
-        
-        if(!isset($databases[$connection])) {
-            throw new KumbiaException("No existe la conexion $connection en databases.ini");
-        }
-    
-        $database = $databases[$connection];
-    
-        // genera el nombre de clase
-        $Class = ucfirst($database['type']) . 'Db';
-    
-        // si no existe la clase la carga
-        if(!class_exists($Class, FALSE)) {
-            // carga la clase
-            require CORE_PATH . "libs/ActiveRecord/db_pool/adapters/{$database['type']}_db.php";
-        }
-        
-        return new $Class($connection);
+		// Si no existe el Singleton
+		if(!isset(self::$_adapters[$connection])) {
+			// Lee la configuracion de base de datos
+			$databases = Config::read('databases');
+			
+			if(!isset($databases[$connection])) {
+				throw new KumbiaException("No existe la conexion $connection en databases.ini");
+			}
+		
+			$database = $databases[$connection];
+		
+			// Genera el nombre de clase
+			$Class = ucfirst($database['type']) . 'Db';
+		
+			// Si no existe la clase la carga
+			if(!class_exists($Class, FALSE)) {
+				// Carga la clase
+				require CORE_PATH . "libs/ActiveRecord/db_pool/adapters/{$database['type']}_db.php";
+			}
+			
+			// Instancia el adaptador
+			self::$_adapters[$connection] = new $Class($connection);
+		}
+		
+		// Retorna el adaptador
+        return self::$_adapters[$connection];
     }
        
     /**
@@ -99,7 +113,7 @@ abstract class DbAdapter
     {
         $sqlArray = $dbQuery->getSqlArray();
         
-        // verifica si se indico una table
+        // Verifica si se indico una table
         if(!isset($sqlArray['table'])) {
             throw new KumbiaException("Debe indicar una tabla para efectuar la consulta");
         }
@@ -145,12 +159,12 @@ abstract class DbAdapter
      */
     protected function _insert($sqlArray)
     {
-        //obtiene las columns
+        // Obtiene las columns
         $columns = implode(', ', array_keys($sqlArray['data']));
-        //Parámetros enlazados para SQL PS
+        // Parámetros enlazados para SQL PS
         $values = implode(', ', array_keys($sqlArray['bind']));
         
-        // verifica si esta definido el eschema
+        // Verifica si esta definido el eschema
         if(isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
@@ -167,14 +181,14 @@ abstract class DbAdapter
      */
     protected function _update($sqlArray)
     {
-		// Construte la pareja clave, valor para SQL PS
+		// Construye la pareja clave, valor para SQL PS
         $values = array();
         foreach(array_keys($sqlArray['data']) as $k) {
             $values[] = "$k = :$k";
         }
         $values = implode(', ', $values);
         
-        // verifica si esta definido el eschema
+        // Verifica si esta definido el eschema
         if(isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
@@ -211,28 +225,28 @@ abstract class DbAdapter
      */
     protected function _joinClausules($sqlArray, $sql)
     {
-        // para inner join
+        // Para inner join
         if(isset($sqlArray['join'])) {
             foreach($sqlArray['join'] as $join) {
                 $sql .= " INNER JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
-        // para left outer join
+        // Para left outer join
         if(isset($sqlArray['leftJoin'])) {
             foreach($sqlArray['leftJoin'] as $join) {
                 $sql .= " LEFT OUTER JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
-        // para right outer join
+        // Para right outer join
         if(isset($sqlArray['rightJoin'])) {
             foreach($sqlArray['rightJoin'] as $join) {
                 $sql .= " RIGHT OUTER JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
-        // para full join
+        // Para full join
         if(isset($sqlArray['fullJoin'])) {
             foreach($sqlArray['fullJoin'] as $join) {
                 $sql .= " FULL JOIN {$join['table']} ON ({$join['conditions']})";

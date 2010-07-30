@@ -97,6 +97,20 @@ class DbQuery
         }
         return $this;
     }
+	
+    /**
+     * Parámetro que sera enlazado a la setencia SQL
+     * 
+     * @param string $bind
+	 * @param string $value
+     * @return DbQuery
+     */
+    public function bindValue($bind, $value)
+    {
+        $this->_sql['bind'][":$bind"] = $value;
+        return $this;
+    }
+	
     /**
      * Retorna los elementos para ser enlazados
      * 

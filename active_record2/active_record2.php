@@ -144,6 +144,22 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	{}
 	
 	/**
+	 * Callback antes de actualizar
+	 * 
+	 * @return boolean
+	 */
+	protected function _beforeUpdate()
+	{}
+	
+	/**
+	 * Callback despues de actualizar
+	 * 
+	 * @return boolean
+	 */
+	protected function _afterUpdate()
+	{}
+	
+	/**
 	 * Modo de obtener datos 
 	 * 
 	 * @param integer $mode
@@ -315,12 +331,9 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      */
     public function sql ($sql, $params = NULL, $fetchMode = NULL)
     {
-		// Obtiene una instancia del adaptador
-		$adapter = DbAdapter::factory($this->_connection);
-		
 		try {			
-			// Prepara la consulta
-            $this->_resultSet = $adapter->prepare($sql);
+			// Obtiene una instancia del adaptador y prepara la consulta
+            $this->_resultSet = DbAdapter::factory($this->_connection)->prepare($sql);
 			
 			// Indica el modo de obtener los datos en el ResultSet
 			$this->_fetchMode($fetchMode);
@@ -351,13 +364,10 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         if ($this->_schema) {
             $dbQuery->schema($this->_schema);
         }
-		     
-		// Obtiene una instancia del adaptador
-		$adapter = DbAdapter::factory($this->_connection);
-			    
+		   
 		try {			
-			// Prepara la consulta
-            $this->_resultSet = $adapter->prepareDbQuery($dbQuery);
+			// Obtiene una instancia del adaptador y prepara la consulta
+            $this->_resultSet = DbAdapter::factory($this->_connection)->prepareDbQuery($dbQuery);
 			
 			// Indica el modo de obtener los datos en el ResultSet
 			$this->_fetchMode($fetchMode);
@@ -435,7 +445,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 */
 	public function findBy($column, $value, $fetchMode = NULL)
 	{
-		$this->get()->where("$column = :value")->bind(array('value' => $value));
+		$this->get()->where("$column = :value")->bindValue('value', $value);
 		return $this->first($fetchMode);
 	}
 		
@@ -449,8 +459,18 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 */
 	public function findAllBy($column, $value, $fetchMode = NULL)
 	{
-		$this->get()->where("$column = :value")->bind(array('value' => $value));
+		$this->get()->where("$column = :value")->bindValue('value', $value);
 		return $this->find($fetchMode);
+	}
+	
+	/**
+	 * Obtiene la clave primaria
+	 * 
+	 * @return string
+	 */
+	public function getPK()
+	{
+		return DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema)->getPK();
 	}
 	
 	/**
@@ -462,10 +482,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 */
 	public function findByPK($value, $fetchMode = NULL)
 	{
-		// Obtiene la metadata
-		$metadata = DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema);
-		
-		return $this->findBy($metadata->getPK(), $value, $fetchMode);
+		return $this->findBy($this->getPK(), $value, $fetchMode);
 	}
 	
 	/**
@@ -476,14 +493,13 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 */
 	private function _getTableValues()
 	{
-		// Obtiene la metadata
-		$metadata = DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema);
-		
-		// TODO: Falta el caso de la clave primaria autogenerada y completar con NULL cuando la propiedad no existe
-		
 		$data = array();
+		
 		// Itera en cada atributo
-		foreach($metadata->getAttributesList() as $attr) {
+		foreach(DbAdapter::factory($this->_connection)
+					->describe($this->getTable(), $this->_schema)
+					->getAttributesList() as $attr) {
+						
 			if(property_exists($this, $attr)) {
 				if($this->$attr === '') {
 					$data[$attr] = NULL;
@@ -502,7 +518,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * Realiza un insert sobre la tabla
      * 
      * @param array $data información a ser guardada
-     * @return Bool 
+     * @return ActiveRecord 
      */
     public function create ($data = NULL)
     {		
@@ -510,17 +526,17 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         if (is_array($data)) {
             $this->dump($data);
         }
-		
-		// Callback antes de crear
-		if($this->_beforeCreate() === FALSE) {
-			return FALSE;
-		}
-		
+				
 		// @see ActiveRecordValidator
 		require_once CORE_PATH . 'libs/ActiveRecord/active_record2/active_record_validator.php';
 		
 		// Ejecuta la validacion
 		if(ActiveRecordValidator::validateOnCreate($this) === FALSE) {
+			return FALSE;
+		}
+		
+		// Callback antes de crear
+		if($this->_beforeCreate() === FALSE) {
 			return FALSE;
 		}
 		
@@ -531,7 +547,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		if($this->query($dbQuery->insert($this->_getTableValues()))) {
 			// Callback despues de crear
 			$this->_afterCreate();
-			return TRUE;
+			return $this;
 		}
 		
 		return FALSE;
@@ -603,24 +619,92 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	}
 	
 	/**
+	 * Establece condicion de busqueda con clave primaria
+	 * 
+	 * @param DbQuery $dbQuery
+	 */
+	protected function _wherePK($dbQuery)
+	{
+		// Obtiene la clave primaria
+		$pk = $this->getPK();
+		
+		// Si es clave primaria compuesta
+		if(is_array($pk)) {
+			foreach($pk as $k) {
+				if(!isset($this->$k)) {
+					throw new KumbiaException("Debe definir valor para la columna $k de la clave primaria");
+				}
+				
+				$dbQuery->where("$k = :pk_$k")->bindValue("pk_$k", $this->$k);
+			}
+		} else {
+			if(!isset($this->$pk)) {
+				throw new KumbiaException("Debe definir valor para la clave primaria");
+			}
+			
+			$dbQuery->where("$pk = :pk_$pk")->bindValue("pk_$pk", $this->$pk);
+		}
+	}
+	
+	/**
 	 * Verifica si esta persistente en la BD el objeto actual en la bd
 	 * 
 	 * @return boolean
 	 */
 	public function exists()
 	{
-		// Obtiene la clave primaria
-		$metadata = DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema);
-		$pk = $metadata->getPK();
+		// Objeto de consulta
+		$dbQuery = $this->get();
 		
-		// Si no esta definido valor para clave primaria
-		if(!isset($this->$pk) || !$this->$pk) {
+		// Establece condicion de busqueda con clave primaria
+		$this->_wherePK($dbQuery);
+		
+		return $this->existsOne();
+	}
+	
+	/**
+     * Realiza un update del registro sobre la tabla
+     * 
+     * @param array $data información a ser guardada
+     * @return Bool 
+     */
+	public function update($data = NULL)
+	{				
+		// Si es un array, se cargan los atributos en el objeto
+        if (is_array($data)) {
+            $this->dump($data);
+        }
+				
+		// @see ActiveRecordValidator
+		require_once CORE_PATH . 'libs/ActiveRecord/active_record2/active_record_validator.php';
+		
+		// Ejecuta la validacion
+		if(ActiveRecordValidator::validateOnUpdate($this) === FALSE) {
 			return FALSE;
 		}
 		
-		// Establece la condicion de busqueda por clave primaria
-		$this->get()->where("$pk = :$pk")->bind(array($pk => $this->$pk));
+		// Callback antes de actualizar
+		if($this->_beforeUpdate() === FALSE) {
+			return FALSE;
+		}
 		
-		return $this->existsOne();
+		// Si no existe el registro
+		if(!$this->exists()) {
+			return FALSE;
+		}
+
+		// Objeto de consulta
+		$dbQuery = new DbQuery();
+		// Establece condicion de busqueda con clave primaria
+		$this->_wherePK($dbQuery);
+		
+		// Ejecuta la consulta con el query utilizado para el exists
+		if($this->query($dbQuery->update($this->_getTableValues()))) {
+			// Callback despues de actualizar
+			$this->_afterUpdate();
+			return $this;
+		}
+		
+		return FALSE;
 	}
 }
