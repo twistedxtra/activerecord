@@ -90,30 +90,20 @@ class ActiveRecordValidator
 			return TRUE;
 		}
 				
-		// Columnas autogeneradas
-		$autogen = array();
+		// Columnas con valor por defectos
+		$default = array();
 		
-		// Verifica si existe columnas autogeneradas
-		if(isset($validators['auto'])) {
+		// Verifica si existe columnas con valor por defectos
+		if(isset($validators['default'])) {
 			
 			// Itera en cada definicion de validacion
-			foreach($validators['auto'] as $v) {
-				// Si es una columna sin configuracion especial
-				if(is_string($v)) {
-					$column = $v;					
-					$params = NULL;
-				} else {
-					$column = $v[0];
-					unset($v[0]);
-					$params = $v;
-				}
-				
-				// Verifica las condiciones para cuando la columna es autogenerada
-				$autogen[$column] = $this->autoValidator($model, $column, $params, $update);
+			foreach($validators['default'] as $v) {
+				// Verifica las condiciones para cuando la columna es con valor por defecto
+				$default[$v] = $this->defaultValidator($model, $v);
 			}
 			
 			// Aprovecha y libera memoria :)
-			unset($validators['auto']);
+			unset($validators['default']);
 			
 		}
 		
@@ -127,16 +117,16 @@ class ActiveRecordValidator
 			foreach($validators['notNull'] as $v) {
 				// Si es una columna sin configuracion especial
 				if(is_string($v)) {
-					// Si es autogenerada entonces salta la validacion
-					if(isset($autogen[$v]) && $autogen[$v]) {
+					// Si es con valor por defecto entonces salta la validacion
+					if(isset($default[$v]) && $default[$v]) {
 						continue;
 					}
 					
 					$column = $v;					
 					$params = NULL;
 				} else {
-					// Si es autogenerada entonces salta la validacion
-					if(isset($autogen[$v[0]]) && $autogen[$v[0]]) {
+					// Si es con valor por defecto entonces salta la validacion
+					if(isset($default[$v[0]]) && $default[$v[0]]) {
 						continue;
 					}
 					
@@ -162,16 +152,16 @@ class ActiveRecordValidator
 				
 				// Si es una columna sin configuracion especial
 				if(is_string($v)) {
-					// Si es autogenerada entonces salta la validacion
-					if(isset($autogen[$v]) && $autogen[$v]) {
+					// Si es con valor por defecto entonces salta la validacion
+					if(isset($default[$v]) && $default[$v]) {
 						continue;
 					}
 
 					$column = $v;					
 					$params = NULL;
 				} else {
-					// Si es autogenerada entonces salta la validacion
-					if(is_string($v[0]) && isset($autogen[$v[0]]) && $autogen[$v[0]]) {
+					// Si es con valor por defecto entonces salta la validacion
+					if(is_string($v[0]) && isset($default[$v[0]]) && $default[$v[0]]) {
 						continue;
 					}
 					
@@ -197,31 +187,18 @@ class ActiveRecordValidator
 	 * 
 	 * @param ActiveRecord $model
 	 * @param string $column columna a validar
-	 * @param array $params
-	 * @param boolean $update
 	 * @return boolean
 	 */
-	public function autoValidator($model, $column, $params, $update)
+	public function defaultValidator($model, $column)
 	{
-		// Se ha indicado el campo y no se considera nulo, por lo tanto no se autogenerará
+		// Se ha indicado el campo y no se considera nulo, por lo tanto no se tomara por defecto
 		if(isset($model->$column) && $model->$column != '') {
-			// Se considera para autogenerar cuando sea nulo 
+			// Se considera con valor por defecto cuando sea nulo
 			return FALSE;
 		}
 		
-		// Se verifica para cuando es autogenerado
-		if($params) {
-			// Autogenerado al actualizar
-			if(isset($params['update'])) {
-				return $update == $params['update'];
-			}
-				
-			// Autogenerado al crear y al actualizar
-			return isset($params['createAndUpdate']);
-		}
-		
-		// Autogenerado al crear
-		return !$update;
+		// Valor por defecto
+		return TRUE;
 	}
 	
 	/**
