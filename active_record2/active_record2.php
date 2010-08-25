@@ -545,6 +545,18 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		
 		// Ejecuta la consulta
 		if($this->query($dbQuery->insert($this->_getTableValues()))) {
+			// Obtiene el adaptador
+			$adapter = DbAdapter::factory($this->_connection);
+						
+			// Convenio patron identidad en activerecord si PK es "id"
+			if ($adapter->describe($this->getTable(), $this->_schema)
+					->getPK() === 'id' && (!isset($this->id) || $this->id == '')) {
+						
+				// Obtiene el ultimo id insertado y lo carga en el objeto
+				$this->id = $adapter->pdo()->lastInsertId();
+			}
+
+			
 			// Callback despues de crear
 			$this->_afterCreate();
 			return $this;
