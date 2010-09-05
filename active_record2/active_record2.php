@@ -704,4 +704,48 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		return FALSE;
 	}
 	
+	/**
+     * Elimina el registro correspondiente al objeto
+     * 
+     * @return Bool 
+     */
+	public function delete()
+	{	
+		// Objeto de consulta
+		$dbQuery = new DbQuery();
+		// Establece condicion de busqueda con clave primaria
+		$this->_wherePK($dbQuery);
+		
+		// Ejecuta la consulta con el query utilizado para el exists
+		if($this->query($dbQuery->delete())) {
+			return $this;
+		}
+		
+		return FALSE;
+	}
+	
+	/**
+     * Elimina el registro por medio de la clave primaria
+     * 
+	 * @param string $value
+     * @return Bool 
+     */
+	public function deleteByPK($value)
+	{	
+		// Objeto de consulta
+		$dbQuery = new DbQuery();
+		
+		// Obtiene la clave primeria
+		$pk = $this->metadata()->getPK();
+		
+		// Establece la condicion
+		$dbQuery->where("$pk = :pk_$pk")->bindValue("pk_$pk", $value);
+		
+		// Ejecuta la consulta con el query utilizado para el exists
+		if($this->query($dbQuery->delete())) {
+			return $this;
+		}
+		
+		return FALSE;
+	}
 }
