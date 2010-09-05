@@ -243,7 +243,7 @@ class ActiveRecordValidator
 		// a la clave primaria
 		if($update) {	
 			// Obtiene la clave primaria
-			$pk = $model->getPK();
+			$pk = $model->metadata()->getPK();
 			
 			if(is_array($pk)) {
 				// Itera en cada columna de la clave primaria

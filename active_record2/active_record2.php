@@ -464,16 +464,6 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	}
 	
 	/**
-	 * Obtiene la clave primaria
-	 * 
-	 * @return string
-	 */
-	public function getPK()
-	{
-		return DbAdapter::factory($this->_connection)->describe($this->getTable(), $this->_schema)->getPK();
-	}
-	
-	/**
 	 * Buscar por medio de la clave primaria
 	 * 
 	 * @param string $value
@@ -482,7 +472,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	 */
 	public function findByPK($value, $fetchMode = NULL)
 	{
-		return $this->findBy($this->getPK(), $value, $fetchMode);
+		return $this->findBy($this->metadata()->getPK(), $value, $fetchMode);
 	}
 	
 	/**
@@ -496,9 +486,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		$data = array();
 		
 		// Itera en cada atributo
-		foreach(DbAdapter::factory($this->_connection)
-					->describe($this->getTable(), $this->_schema)
-					->getAttributesList() as $attr) {
+		foreach($this->metadata()->getAttributesList() as $attr) {
 						
 			if(property_exists($this, $attr)) {
 				if($this->$attr === '') {
@@ -545,15 +533,11 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		
 		// Ejecuta la consulta
 		if($this->query($dbQuery->insert($this->_getTableValues()))) {
-			// Obtiene el adaptador
-			$adapter = DbAdapter::factory($this->_connection);
-						
+					
 			// Convenio patron identidad en activerecord si PK es "id"
-			if ($adapter->describe($this->getTable(), $this->_schema)
-					->getPK() === 'id' && (!isset($this->id) || $this->id == '')) {
-						
+			if ($this->metadata()->getPK() === 'id' && (!isset($this->id) || $this->id == '')) {
 				// Obtiene el ultimo id insertado y lo carga en el objeto
-				$this->id = $adapter->pdo()->lastInsertId();
+				$this->id = DbAdapter::factory($this->_connection)->pdo()->lastInsertId();
 			}
 
 			
@@ -638,7 +622,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 	protected function _wherePK($dbQuery)
 	{
 		// Obtiene la clave primaria
-		$pk = $this->getPK();
+		$pk = $this->metadata()->getPK();
 		
 		// Si es clave primaria compuesta
 		if(is_array($pk)) {
@@ -719,4 +703,5 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 		
 		return FALSE;
 	}
+	
 }

@@ -24,26 +24,28 @@ require CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
  * @copyright  Copyright (c) 2005-2010 KumbiaPHP Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-class KumbiaModel
+abstract class KumbiaModel
 {
     /**
      * Instancias de metadata de modelos
      *
      * @var array
-     **/
+     */
     private static $_metadata = array();
     
     /**
      * Obtiene la metatada de un modelo
      *
      * @return Metadata
-     **/
-    public static function metadata($model)
+     */
+    public function metadata()
     {
+		$model = get_class($this);
+		
         if(!isset(self::$_metadata[$model])) {
-            self::$_metadata[$model] = new Metadata();
+            self::$_metadata[$model] = DbAdapter::factory($this->getConnection())->describe($this->getTable(), $this->getSchema());
         }
-        
+		
         return self::$_metadata[$model];
     }
 }
