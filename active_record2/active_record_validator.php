@@ -20,70 +20,44 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
+// @see ValidatorInterface
+require_once CORE_PATH . 'libs/ActiveRecord/active_record2/validators/validator_interface.php';
+
 class ActiveRecordValidator
 {	
 	/**
-	 * Instancia del validador
-	 * 
-	 * @var ActiveRecordValidator
-	 */ 
-	private static $_instance = NULL;
-	
-	/**
-	 * Constructor
-	 * 
-	 * @param ActiveRecord $model
-	 * @param boolean $update
-	 */
-	private function __construct()
-	{}
-	
-	/**
-	 * Obtiene una instancia
-	 * 
-	 * @return ActiveRecordValidator
-	 */
-	public static function getInstance()
-	{
-		if(!self::$_instance) {
-			self::$_instance = new self;
-		}
-		return self::$_instance;
-	}
-	
-	/**
 	 * Validar en caso de crear
 	 * 
-	 * @param ActiveRecord $model
+	 * @param ActiveRecord $object
 	 * @return boolean
 	 */
-	public final static function validateOnCreate($model)
+	public final static function validateOnCreate($object)
 	{
-		return self::getInstance()->_validate($model);
+		return self::_validate($object);
 	}
 	
 	/**
 	 * Validar en caso de actualizar
 	 * 
-	 * @param ActiveRecord $model
+	 * @param ActiveRecord $object
 	 * @return boolean
 	 */
-	public final static function validateOnUpdate($model)
+	public static function validateOnUpdate($object)
 	{
-		return self::getInstance()->_validate($model, TRUE);
+		return self::_validate($object, TRUE);
 	}
 	
 	/**
 	 * Efectua las validaciones
 	 * 
-	 * @param ActiveRecord $model
+	 * @param ActiveRecord $object
 	 * @param boolean $update
 	 * @return boolean
 	 */
-	private function _validate($model, $update = FALSE)
+	private static function _validate($object, $update = FALSE)
 	{
 		// Obtiene los validadores
-		$validators = $model->validators();
+		$validators = $object->validators();
 		
 		// Si no hay validadores definidos
 		if(!$validators) {
@@ -95,16 +69,17 @@ class ActiveRecordValidator
 		
 		// Verifica si existe columnas con valor por defectos
 		if(isset($validators['default'])) {
+			// @see DefaultValidator
+			require_once CORE_PATH . "libs/ActiveRecord/active_record2/validators/default_validator.php";
 			
 			// Itera en cada definicion de validacion
 			foreach($validators['default'] as $v) {
 				// Verifica las condiciones para cuando la columna es con valor por defecto
-				$default[$v] = $this->defaultValidator($model, $v);
+				$default[$v] = DefaultValidator::validate($object, $v, NULL, $update);
 			}
 			
 			// Aprovecha y libera memoria :)
 			unset($validators['default']);
-			
 		}
 		
 		// Por defecto es valido
@@ -112,6 +87,8 @@ class ActiveRecordValidator
 		
 		// Verifica si existe columnas no nulas
 		if(isset($validators['notNull'])) {
+			// @see NotNullValidator
+			require_once CORE_PATH . "libs/ActiveRecord/active_record2/validators/not_null_validator.php";
 			
 			// Itera en cada definicion de validacion
 			foreach($validators['notNull'] as $v) {
@@ -136,16 +113,22 @@ class ActiveRecordValidator
 				}
 				
 				// Valida si el campo
-				$valid = $this->notNullValidator($model, $column, $params) && $valid;
+				$valid = NotNullValidator::validate($object, $column, $params, $update) && $valid;
 			}
 			
 			// Aprovecha y libera memoria :)
 			unset($validators['notNull']);
-			
 		}
 		
 		// Realiza el resto de las validaciones a las columnas
 		foreach($validators as $validator => $validations) {
+			// Clase validadora
+			$class = $validator.'validator';
+			
+			// Carga el validador de ser necesario
+			if(!class_exists($class, FALSE)) {
+				self::_load($validator);
+			}
 			
 			// Itera en cada definicion de validacion
 			foreach($validations as $v) {
@@ -170,8 +153,8 @@ class ActiveRecordValidator
 					$params = $v;
 				}
 								
-				if(is_array($column) || (isset($model->$column) && $model->$column != '')) {
-					$valid = $this->{"{$validator}Validator"}($model, $column, $params, $update) && $valid;
+				if(is_array($column) || (isset($object->$column) && $object->$column != '')) {
+					$valid = call_user_func(array($class, 'validate'), $object, $column, $params, $update) && $valid;
 				}
 				
 			}
@@ -181,307 +164,26 @@ class ActiveRecordValidator
 		// Resultado de validacion
 		return $valid;
 	}
-		
-	/**
-	 * Validator para columnas con valores autogenerados
-	 * 
-	 * @param ActiveRecord $model
-	 * @param string $column columna a validar
-	 * @return boolean
-	 */
-	public function defaultValidator($model, $column)
-	{
-		// Se ha indicado el campo y no se considera nulo, por lo tanto no se tomara por defecto
-		if(isset($model->$column) && $model->$column != '') {
-			// Se considera con valor por defecto cuando sea nulo
-			return FALSE;
-		}
-		
-		// Valor por defecto
-		return TRUE;
-	}
 	
 	/**
-	 * Validador para campo no nulo
-	 * 
-	 * @param ActiveRecord $model
-	 * @param string $column columna a validar
-	 * @param array $params
+	 * Carga un validador
+	 *
+	 * @param string $validator
+	 * @throw KumbiaException
 	 */
-	public function notNullValidator($model, $column, $params = NULL) 
+	private static function _load($validator)
 	{
-		if(!isset($model->$column) || Validate::isNull($model->$column)) {
-			if($params && isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column no debe ser Nulo");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;	
-	}
-	
-	/**
-	 * Validador para campo con valor unico
-	 * 
-	 * @param ActiveRecord $model
-	 * @param string $column columna a validar
-	 * @param array $params
-	 * @param boolean $update
-	 * @return boolean
-	 */
-	public function uniqueValidator($model, $column, $params = NULL, $update = FALSE) 
-	{	
-		// Condiciones
-		$q = $model->get();
+		// Convierte a smallcase
+		$validatorSmall = Util::smallcase($validator);
 		
-		$values = array();
-		
-		// Si es para actualizar debe verificar que no sea la fila que corresponde
-		// a la clave primaria
-		if($update) {	
-			// Obtiene la clave primaria
-			$pk = $model->metadata()->getPK();
-			
-			if(is_array($pk)) {
-				// Itera en cada columna de la clave primaria
-				$conditions = array();
-				foreach($pk as $k) {
-					// Verifica que este definida la clave primaria
-					if(!isset($model->$k) || $model->$k === '') {
-						throw new KumbiaException("Debe definir valor para la columna $k de la clave primaria");
-					}
-					
-					$conditions[] = "$k = :pk_$k";
-					$q->bindValue("pk_$k", $model->$k);
-				}
-				
-				$q->where('NOT (' . implode(' AND ', $conditions) . ')');
-			} else {
-				// Verifica que este definida la clave primaria
-				if(!isset($model->$pk) || $model->$pk === '') {
-					throw new KumbiaException("Debe definir valor para la clave primaria $pk");
-				}
-						
-				$q->where("NOT $pk = :pk_$pk");
-				$q->bindValue("pk_$pk", $model->$pk);
+		$file = APP_PATH . "extensions/validators/{$validatorSmall}_validator.php";
+		if(!is_file($file)) {
+			$file = CORE_PATH . "libs/ActiveRecord/active_record2/validators/{$validatorSmall}_validator.php";
+			if(!is_file($file)) {
+				throw new KumbiaException("Validador $validator no encontrado");
 			}
 		}
-		
-		if(is_array($column)) {	
-			// Establece condiciones con with
-			foreach($column as $k) {
-				// En un indice UNIQUE si uno de los campos es NULL, entonces el indice
-				// no esta completo y no se considera la restriccion
-				if(!isset($model->$k) || $model->$k === '') {
-					return TRUE;
-				}
-				
-				$values[$k] = $model->$k;
-				$q->where("$k = :$k");
-			}
-			
-			$q->bind($values);
-				
-			// Verifica si existe
-			if($model->existsOne()) {
-				if(!isset($params['message'])) {
-					$v = implode("', '", array_values($values));
-					$c = implode("', '", array_keys($values));
-					$msg = "Los valores '$v' ya existen para los campos '$c'";
-				} else {
-					$msg = $params['message'];
-				}
-					
-				Flash::error($msg);
-				return FALSE;
-			}
-		} else {		
-			$values[$column] = $model->$column;
-			
-			$q->where("$column = :$column")->bind($values);
-			// Verifica si existe
-			if($model->existsOne()) {
-				if(!isset($params['message'])) {
-					$msg = "El valor '{$model->$column}' ya existe para el campo $column";
-				} else {
-					$msg = $params['message'];
-				}
-				
-				Flash::error($msg);
-				return FALSE;
-			}
-		}
-		
-		return TRUE;
-	}
-	
-	/**
-	 * Validador para clave primaria
-	 * 
-	 * @param string $column columna a validar
-	 * @param array $params
-	 */
-	public function primaryValidator($model, $column, $params = NULL, $update = FALSE)
-	{
-		// Condiciones
-		$q = $model->get();
-		
-		if(is_array($column)) {	
-			$values = array();
-			
-			// Establece condiciones
-			foreach($column as $k) {
-				// En un indice UNIQUE si uno de los campos es NULL, entonces el indice
-				// no esta completo y no se considera la restriccion
-				if(!isset($model->$k) || $model->$k === '') {
-					return TRUE;
-				}
-				
-				$values[$k] = $model->$k;
-				$q->where("$k = :$k");
-			}
-			
-			// Si es para actualizar debe verificar que no sea la fila que corresponde
-			// a la clave primaria
-			if($update) {	
-				$conditions = array();
-				foreach($column as $k) {
-					$conditions[] = "$k = :pk_$k";
-					$q->bindValue("pk_$k", $model->$k);
-				}
-				
-				$q->where('NOT (' . implode(' AND ', $conditions) . ')');
-			}
-			
-			$q->bind($values);
-				
-			// Verifica si existe
-			if($model->existsOne()) {
-				if(!isset($params['message'])) {
-					$v = implode("', '", array_values($values));
-					$c = implode("', '", array_keys($values));
-					$msg = "Los valores '$v' ya existen para los campos '$c'";
-				} else {
-					$msg = $params['message'];
-				}
-					
-				Flash::error($msg);
-				return FALSE;
-			}
-		} else {		
-			// Si es para actualizar debe verificar que no sea la fila que corresponde
-			// a la clave primaria
-			if($update) {	
-				$q->where("NOT $column = :pk_$column");
-				$q->bindValue("pk_$column", $model->$column);
-			}
-			
-			$q->where("$column = :$column")->bindValue($column, $model->$column);
-			
-			// Verifica si existe
-			if($model->existsOne()) {
-				if(!isset($params['message'])) {
-					$msg = "El valor '{$model->$column}' ya existe para el campo $column";
-				} else {
-					$msg = $params['message'];
-				}
-				
-				Flash::error($msg);
-				return FALSE;
-			}
-		}
-		
-		return TRUE;
-	}
-	
-	/**
-	 * Validador para campo con valor numero entero
-	 * 
-	 * @param string $column columna a validar
-	 * @param array $params
-	 * @return boolean
-	 */
-	public function integerValidator($model, $column, $params = NULL) 
-	{
-		if(!Validate::int($model->$column)) {
-			if($params && isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe ser un número entero");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;	
-	}
-	
-	/**
-	 * Validador para longitud de una cadena en un rango determinado
-	 * 
-	 * @param string $column columna a validar
-	 * @param array $params
-	 * @return boolean
-	 */
-	public function lengthBetween($model, $column, $params)
-	{
-		if(!Validate::between($model->$column, $params['min'], $params['max'])) {
-			if(isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe tener una cantidad de caracteres comprendida entre $min y $max");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;	
-	}
-	
-	/**
-	 * Validador para longitud minima de una cadena
-	 * 
-	 * @param string $column columna a validar
-	 * @param array $params
-	 * @return boolean
-	 */
-	public function minLengthValidator($model, $column, $params)
-	{
-		if(strlen($model->$column) < $params['min']) {
-			if(isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe tener una cantidad de caracteres minima de {$params['min']}");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;	
-	}
-	
-	/**
-	 * Validador para longitud maxima de una cadena
-	 * 
-	 * @param string $column columna a validar
-	 * @param array $params
-	 * @return boolean
-	 */
-	public function maxLengthValidator($model, $column, $params)
-	{
-		if(strlen($model->$column) > $params['max']) {
-			if(isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe tener una cantidad de caracteres maxima de {$params['max']}");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;	
+        
+        include $file;
 	}
 }
