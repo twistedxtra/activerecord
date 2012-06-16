@@ -15,7 +15,7 @@
 /**
  * @see Metadata
  */
-require CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
+require '/../db_pool/metadata.php';
 
 /** Implementación de Modelo
  * 
@@ -26,13 +26,14 @@ require CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
  */
 abstract class KumbiaModel
 {
+
     /**
      * Instancias de metadata de modelos
      *
      * @var array
      */
     private static $_metadata = array();
-    
+
     /**
      * Obtiene la metatada de un modelo
      *
@@ -40,12 +41,13 @@ abstract class KumbiaModel
      */
     public function metadata()
     {
-		$model = get_class($this);
-		
-        if(!isset(self::$_metadata[$model])) {
+        $model = get_class($this);
+
+        if (!isset(self::$_metadata[$model])) {
             self::$_metadata[$model] = DbAdapter::factory($this->getConnection())->describe($this->getTable(), $this->getSchema());
         }
-		
+
         return self::$_metadata[$model];
     }
+
 }
