@@ -27,20 +27,20 @@
 
 abstract class DbAdapter
 {
-	/**
-	 * Instancias de adaptadores por conexion
-	 * 
-	 * @var array
-	 */
-	private static $_adapters = array();
-	
+
+    /**
+     * Instancias de adaptadores por conexion
+     *
+     * @var array
+     */
+    private static $_adapters = array();
     /**
      * Nombre de conexion
      *
      * @var string
      */
     protected $_connection;
-    
+
     /**
      * Genera la descripcion de una tabla
      *
@@ -73,58 +73,58 @@ abstract class DbAdapter
         if (!$connection) {
             $connection = Config::get('config.application.database');
         }
-    
-		// Si no existe el Singleton
-		if(!isset(self::$_adapters[$connection])) {
-			// Lee la configuracion de base de datos
-			$databases = Config::read('databases');
-			
-			if(!isset($databases[$connection])) {
-				throw new KumbiaException("No existe la conexion $connection en databases.ini");
-			}
-		
-			$database = $databases[$connection];
-		
-			// Genera el nombre de clase
-			$Class = ucfirst($database['type']) . 'Db';
-		
-			// Si no existe la clase la carga
-			if(!class_exists($Class, FALSE)) {
-				// Carga la clase
-				require CORE_PATH . "libs/ActiveRecord/db_pool/adapters/{$database['type']}_db.php";
-			}
-			
-			// Instancia el adaptador
-			self::$_adapters[$connection] = new $Class($connection);
-		}
-		
-		// Retorna el adaptador
+
+        // Si no existe el Singleton
+        if (!isset(self::$_adapters[$connection])) {
+            // Lee la configuracion de base de datos
+            $databases = Config::read('databases');
+
+            if (!isset($databases[$connection])) {
+                throw new KumbiaException("No existe la conexion $connection en databases.ini");
+            }
+
+            $database = $databases[$connection];
+
+            // Genera el nombre de clase
+            $Class = ucfirst($database['type']) . 'Db';
+
+            // Si no existe la clase la carga
+            if (!class_exists($Class, FALSE)) {
+                // Carga la clase
+                require "{$database['type']}_db.php";
+            }
+
+            // Instancia el adaptador
+            self::$_adapters[$connection] = new $Class($connection);
+        }
+
+        // Retorna el adaptador
         return self::$_adapters[$connection];
     }
-       
+
     /**
      * Genera la consulta sql concreta
      *
      * @param DbQuery $dbQuery
      * @return string
-	 * @throw KumbiaException
+     * @throw KumbiaException
      */
     public function query($dbQuery)
     {
         $sqlArray = $dbQuery->getSqlArray();
-        
+
         // Verifica si se indico una table
-        if(!isset($sqlArray['table'])) {
+        if (!isset($sqlArray['table'])) {
             throw new KumbiaException("Debe indicar una tabla para efectuar la consulta");
         }
-		
-        if(isset($sqlArray['command'])) {
-            return $this->{"_{$sqlArray['command']}"}($sqlArray);            
+
+        if (isset($sqlArray['command'])) {
+            return $this->{"_{$sqlArray['command']}"}($sqlArray);
         }
-        
+
         throw new KumbiaException("Debe indicar un comando de consulta SQL");
     }
-    
+
     /**
      * Genera una consulta sql SELECT
      *
@@ -134,23 +134,23 @@ abstract class DbAdapter
     protected function _select($sqlArray)
     {
         // Verifica si esta definido el esquema
-        if(isset($sqlArray['schema'])) {
+        if (isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
             $source = $sqlArray['table'];
         }
-        
+
         $select = 'SELECT';
-        if(isset($sqlArray['distinct']) && $sqlArray['distinct']) {
+        if (isset($sqlArray['distinct']) && $sqlArray['distinct']) {
             $select .= ' DISTINCT';
         }
-        
-		// Columnas en consulta
-		$columns = isset($sqlArray['columns']) ? $sqlArray['columns']: '*';
-		
+
+        // Columnas en consulta
+        $columns = isset($sqlArray['columns']) ? $sqlArray['columns'] : '*';
+
         return $this->_joinClausules($sqlArray, "$select $columns FROM $source");
     }
-    
+
     /**
      * Genera una consulta sql INSERT
      *
@@ -163,16 +163,16 @@ abstract class DbAdapter
         $columns = implode(', ', array_keys($sqlArray['data']));
         // Parámetros enlazados para SQL PS
         $values = implode(', ', array_keys($sqlArray['bind']));
-        
+
         // Verifica si esta definido el eschema
-        if(isset($sqlArray['schema'])) {
+        if (isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
             $source = $sqlArray['table'];
         }
         return "INSERT INTO $source ($columns) VALUES ($values)";
     }
-    
+
     /**
      * Genera una consulta sql INSERT
      *
@@ -181,23 +181,23 @@ abstract class DbAdapter
      */
     protected function _update($sqlArray)
     {
-		// Construye la pareja clave, valor para SQL PS
+        // Construye la pareja clave, valor para SQL PS
         $values = array();
-        foreach(array_keys($sqlArray['data']) as $k) {
+        foreach (array_keys($sqlArray['data']) as $k) {
             $values[] = "$k = :$k";
         }
         $values = implode(', ', $values);
-        
+
         // Verifica si esta definido el eschema
-        if(isset($sqlArray['schema'])) {
+        if (isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
             $source = $sqlArray['table'];
         }
-        
+
         return $this->_joinClausules($sqlArray, "UPDATE $source SET $values");
     }
-    
+
     /**
      * Genera una consulta sql DELETE
      *
@@ -207,15 +207,15 @@ abstract class DbAdapter
     protected function _delete($sqlArray)
     {
         // verifica si esta definido el eschema
-        if(isset($sqlArray['schema'])) {
+        if (isset($sqlArray['schema'])) {
             $source = "{$sqlArray['schema']}.{$sqlArray['table']}";
         } else {
             $source = $sqlArray['table'];
         }
-        
+
         return $this->_joinClausules($sqlArray, "DELETE FROM $source");
     }
-    
+
     /**
      * Une con las clausulas adicionales de consulta
      *
@@ -226,67 +226,67 @@ abstract class DbAdapter
     protected function _joinClausules($sqlArray, $sql)
     {
         // Para inner join
-        if(isset($sqlArray['join'])) {
-            foreach($sqlArray['join'] as $join) {
+        if (isset($sqlArray['join'])) {
+            foreach ($sqlArray['join'] as $join) {
                 $sql .= " INNER JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
         // Para left outer join
-        if(isset($sqlArray['leftJoin'])) {
-            foreach($sqlArray['leftJoin'] as $join) {
+        if (isset($sqlArray['leftJoin'])) {
+            foreach ($sqlArray['leftJoin'] as $join) {
                 $sql .= " LEFT OUTER JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
         // Para right outer join
-        if(isset($sqlArray['rightJoin'])) {
-            foreach($sqlArray['rightJoin'] as $join) {
+        if (isset($sqlArray['rightJoin'])) {
+            foreach ($sqlArray['rightJoin'] as $join) {
                 $sql .= " RIGHT OUTER JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
         // Para full join
-        if(isset($sqlArray['fullJoin'])) {
-            foreach($sqlArray['fullJoin'] as $join) {
+        if (isset($sqlArray['fullJoin'])) {
+            foreach ($sqlArray['fullJoin'] as $join) {
                 $sql .= " FULL JOIN {$join['table']} ON ({$join['conditions']})";
             }
         }
 
-        if(isset($sqlArray['where'])) {
-            if(is_array($sqlArray['where'])) {
+        if (isset($sqlArray['where'])) {
+            if (is_array($sqlArray['where'])) {
                 $where = NULL;
-                $where = ' ' .  implode(' ', $sqlArray['where']);                
+                $where = ' ' . implode(' ', $sqlArray['where']);
             } else {
                 $where = $sqlArray['where'];
             }
             $sql .= " WHERE $where";
         }
-    
-        if(isset($sqlArray['group'])) {
+
+        if (isset($sqlArray['group'])) {
             $sql .= " GROUP BY {$sqlArray['group']}";
         }
 
-        if(isset($sqlArray['having'])) {
+        if (isset($sqlArray['having'])) {
             $sql .= " HAVING {$sqlArray['having']}";
         }
 
-        if(isset($sqlArray['order'])) {
+        if (isset($sqlArray['order'])) {
             $sql .= " ORDER BY {$sqlArray['order']}";
         }
 
-        if(isset($sqlArray['limit'])) {
+        if (isset($sqlArray['limit'])) {
             $sql .= " LIMIT {$sqlArray['limit']}";
         }
 
-        if(isset($sqlArray['offset'])) {
+        if (isset($sqlArray['offset'])) {
             $sql .= " OFFSET {$sqlArray['offset']}";
         }
-        
+
         return $sql;
     }
-	
-	/**
+
+    /**
      * Genera el objeto PDO para la conexion
      *
      * @return PDO
@@ -295,28 +295,29 @@ abstract class DbAdapter
     {
         return DbPool::factory($this->_connection);
     }
-	
-	/**
-	 * Prepara la consulta SQL
-	 * 
-	 * @param string $sql
-	 * @return PDOStatement
-	 */
-	public function prepare($sql)
-	{
-		// PDOStatement
-		return $this->pdo()->prepare($sql);
-	}
-	
-	/**
-	 * Prepara la consulta SQL asociada al objeto dbQuery
-	 * 
-	 * @param DbQuery objeto de consulta
-	 * @return PDOStatement
-	 */
-	public function prepareDbQuery($dbQuery)
-	{
-		// Prepara el dbQuery
-		return $this->pdo()->prepare($this->query($dbQuery));
-	}
+
+    /**
+     * Prepara la consulta SQL
+     * 
+     * @param string $sql
+     * @return PDOStatement
+     */
+    public function prepare($sql)
+    {
+        // PDOStatement
+        return $this->pdo()->prepare($sql);
+    }
+
+    /**
+     * Prepara la consulta SQL asociada al objeto dbQuery
+     *
+     * @param DbQuery objeto de consulta
+     * @return PDOStatement
+     */
+    public function prepareDbQuery($dbQuery)
+    {
+        // Prepara el dbQuery
+        return $this->prepare($this->query($dbQuery));
+    }
+
 }
