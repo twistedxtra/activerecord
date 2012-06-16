@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -23,6 +24,7 @@
  */
 class LengthBetweenValidator implements ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -32,18 +34,23 @@ class LengthBetweenValidator implements ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-	public static function validate($object, $column, $params = NULL, $update = FALSE)
-	{
-		if(!Validate::between($object->$column, $params['min'], $params['max'])) {
-			if(isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe tener una cantidad de caracteres comprendida entre $min y $max");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;
-	}
+    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    {
+        $int_options = array('options' => array(
+                'min_range' => $params['min'],
+                'max_range' => $params['max']
+                ));
+        if (!filter_var($object->$column, FILTER_VALIDATE_INT, $int_options)) {
+            if (isset($params['message'])) {
+                Flash::error($params['message']);
+            } else {
+                Flash::error("El campo $column debe tener una cantidad de caracteres comprendida entre $min y $max");
+            }
+
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
 }

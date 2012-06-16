@@ -33,7 +33,7 @@ class IntegerValidator implements ValidatorInterface
      */
 	public static function validate($object, $column, $params = NULL, $update = FALSE)
 	{
-		if(!Validate::int($object->$column)) {
+		if(!filter_var($object->$column, FILTER_VALIDATE_INT)) {
 			if($params && isset($params['message'])) {
 				Flash::error($params['message']);
 			} else {

@@ -33,7 +33,7 @@ class NotNullValidator implements ValidatorInterface
      */
 	public static function validate($object, $column, $params = NULL, $update = FALSE)
 	{
-		if(!isset($object->$column) || Validate::isNull($object->$column)) {
+		if(!isset($object->$column) || NULL === $object->$column || '' === $object->$column) {
 			if($params && isset($params['message'])) {
 				Flash::error($params['message']);
 			} else {
