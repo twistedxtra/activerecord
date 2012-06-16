@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,6 +23,7 @@
  */
 class MinLengthValidator implements ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -31,18 +33,19 @@ class MinLengthValidator implements ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-	public static function validate($object, $column, $params = NULL, $update = FALSE)
-	{
-		if(strlen($object->$column) < $params['min']) {
-			if(isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe tener una cantidad de caracteres minima de {$params['min']}");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;
-	}
+    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    {
+        if (strlen($object->$column) < $params['min']) {
+            if (isset($params['message'])) {
+                Flash::error($params['message']);
+            } else {
+                Flash::error("El campo $column debe tener una cantidad de caracteres minima de {$params['min']}");
+            }
+
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
 }

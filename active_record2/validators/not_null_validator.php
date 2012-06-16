@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,6 +23,7 @@
  */
 class NotNullValidator implements ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -31,18 +33,19 @@ class NotNullValidator implements ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-	public static function validate($object, $column, $params = NULL, $update = FALSE)
-	{
-		if(!isset($object->$column) || NULL === $object->$column || '' === $object->$column) {
-			if($params && isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column no debe ser Nulo");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;
-	}
+    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    {
+        if (!isset($object->$column) || NULL === $object->$column || '' === $object->$column) {
+            if ($params && isset($params['message'])) {
+                Flash::error($params['message']);
+            } else {
+                Flash::error("El campo $column no debe ser Nulo");
+            }
+
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
 }

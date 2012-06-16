@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,6 +23,7 @@
  */
 class DefaultValidator implements ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -31,15 +33,16 @@ class DefaultValidator implements ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-	public static function validate($object, $column, $params = NULL, $update = FALSE)
-	{
-		// Se ha indicado el campo y no se considera nulo, por lo tanto no se tomara por defecto
-		if(isset($object->$column) && $object->$column != '') {
-			// Se considera con valor por defecto cuando sea nulo
-			return FALSE;
-		}
-		
-		// Valor por defecto
-		return TRUE;
-	}
+    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    {
+        // Se ha indicado el campo y no se considera nulo, por lo tanto no se tomara por defecto
+        if (isset($object->$column) && $object->$column != '') {
+            // Se considera con valor por defecto cuando sea nulo
+            return FALSE;
+        }
+
+        // Valor por defecto
+        return TRUE;
+    }
+
 }

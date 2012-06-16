@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,6 +23,7 @@
  */
 interface ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -31,6 +33,6 @@ interface ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-    public static function validate ($object, $column, $params = NULL, $update = FALSE);
+    public static function validate($object, $column, $params = NULL, $update = FALSE);
 }
 

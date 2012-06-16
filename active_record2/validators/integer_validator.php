@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,6 +23,7 @@
  */
 class IntegerValidator implements ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -31,18 +33,19 @@ class IntegerValidator implements ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-	public static function validate($object, $column, $params = NULL, $update = FALSE)
-	{
-		if(!filter_var($object->$column, FILTER_VALIDATE_INT)) {
-			if($params && isset($params['message'])) {
-				Flash::error($params['message']);
-			} else {
-				Flash::error("El campo $column debe ser un número entero");
-			}
-			
-			return FALSE;
-		}
-				
-		return TRUE;	
-	}
+    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    {
+        if (!filter_var($object->$column, FILTER_VALIDATE_INT)) {
+            if ($params && isset($params['message'])) {
+                Flash::error($params['message']);
+            } else {
+                Flash::error("El campo $column debe ser un número entero");
+            }
+
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
 }

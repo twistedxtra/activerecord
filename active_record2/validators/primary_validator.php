@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,6 +23,7 @@
  */
 class PrimaryValidator implements ValidatorInterface
 {
+
     /**
      * Metodo para validar
      *
@@ -31,76 +33,77 @@ class PrimaryValidator implements ValidatorInterface
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-	public static function validate($object, $column, $params = NULL, $update = FALSE)
-	{
-		// Condiciones
-		$q = $object->get();
-		
-		if(is_array($column)) {	
-			$values = array();
-			
-			// Establece condiciones
-			foreach($column as $k) {
-				// En un indice UNIQUE si uno de los campos es NULL, entonces el indice
-				// no esta completo y no se considera la restriccion
-				if(!isset($object->$k) || $object->$k === '') {
-					return TRUE;
-				}
-				
-				$values[$k] = $object->$k;
-				$q->where("$k = :$k");
-			}
-			
-			// Si es para actualizar debe verificar que no sea la fila que corresponde
-			// a la clave primaria
-			if($update) {	
-				$conditions = array();
-				foreach($column as $k) {
-					$conditions[] = "$k = :pk_$k";
-					$q->bindValue("pk_$k", $object->$k);
-				}
-				
-				$q->where('NOT (' . implode(' AND ', $conditions) . ')');
-			}
-			
-			$q->bind($values);
-				
-			// Verifica si existe
-			if($object->existsOne()) {
-				if(!isset($params['message'])) {
-					$v = implode("', '", array_values($values));
-					$c = implode("', '", array_keys($values));
-					$msg = "Los valores '$v' ya existen para los campos '$c'";
-				} else {
-					$msg = $params['message'];
-				}
-					
-				Flash::error($msg);
-				return FALSE;
-			}
-		} else {		
-			// Si es para actualizar debe verificar que no sea la fila que corresponde
-			// a la clave primaria
-			if($update) {	
-				$q->where("NOT $column = :pk_$column");
-				$q->bindValue("pk_$column", $object->$column);
-			}
-			
-			$q->where("$column = :$column")->bindValue($column, $object->$column);
-			
-			// Verifica si existe
-			if($object->existsOne()) {
-				if(!isset($params['message'])) {
-					$msg = "El valor '{$object->$column}' ya existe para el campo $column";
-				} else {
-					$msg = $params['message'];
-				}
-				
-				Flash::error($msg);
-				return FALSE;
-			}
-		}
-		
-		return TRUE;
-	}
+    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    {
+        // Condiciones
+        $q = $object->get();
+
+        if (is_array($column)) {
+            $values = array();
+
+            // Establece condiciones
+            foreach ($column as $k) {
+                // En un indice UNIQUE si uno de los campos es NULL, entonces el indice
+                // no esta completo y no se considera la restriccion
+                if (!isset($object->$k) || $object->$k === '') {
+                    return TRUE;
+                }
+
+                $values[$k] = $object->$k;
+                $q->where("$k = :$k");
+            }
+
+            // Si es para actualizar debe verificar que no sea la fila que corresponde
+            // a la clave primaria
+            if ($update) {
+                $conditions = array();
+                foreach ($column as $k) {
+                    $conditions[] = "$k = :pk_$k";
+                    $q->bindValue("pk_$k", $object->$k);
+                }
+
+                $q->where('NOT (' . implode(' AND ', $conditions) . ')');
+            }
+
+            $q->bind($values);
+
+            // Verifica si existe
+            if ($object->existsOne()) {
+                if (!isset($params['message'])) {
+                    $v = implode("', '", array_values($values));
+                    $c = implode("', '", array_keys($values));
+                    $msg = "Los valores '$v' ya existen para los campos '$c'";
+                } else {
+                    $msg = $params['message'];
+                }
+
+                Flash::error($msg);
+                return FALSE;
+            }
+        } else {
+            // Si es para actualizar debe verificar que no sea la fila que corresponde
+            // a la clave primaria
+            if ($update) {
+                $q->where("NOT $column = :pk_$column");
+                $q->bindValue("pk_$column", $object->$column);
+            }
+
+            $q->where("$column = :$column")->bindValue($column, $object->$column);
+
+            // Verifica si existe
+            if ($object->existsOne()) {
+                if (!isset($params['message'])) {
+                    $msg = "El valor '{$object->$column}' ya existe para el campo $column";
+                } else {
+                    $msg = $params['message'];
+                }
+
+                Flash::error($msg);
+                return FALSE;
+            }
+        }
+
+        return TRUE;
+    }
+
 }
