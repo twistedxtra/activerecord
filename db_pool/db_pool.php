@@ -23,12 +23,12 @@
 /**
  * @see DbAdapter
  **/
-require CORE_PATH . 'libs/ActiveRecord/db_pool/adapters/db_adapter.php';
+require_once 'adapters/db_adapter.php';
 
 /**
  * @see DbQuery
  **/
-require CORE_PATH . 'libs/ActiveRecord/db_pool/db_query.php';
+require_once 'db_query.php';
 
 /**
  * Clase que maneja el pool de conexiones

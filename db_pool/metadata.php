@@ -21,7 +21,7 @@
  */
  
 // @see Attribute 
-require_once CORE_PATH . 'libs/ActiveRecord/db_pool/attribute.php';
+require_once 'attribute.php';
 
 class Metadata
 {

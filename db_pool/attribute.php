@@ -1,6 +1,8 @@
 <?php
-class Attribute 
+
+class Attribute
 {
+
     /**
      * Alias del campo
      */
@@ -18,9 +20,9 @@ class Attribute
      */
     public $length = 50;
     /**
-     * Indica si es NULL el campo
+     * Indica si es NOT NULL el campo
      */
-    public $notNull = TRUE;
+    public $notNull = FALSE;
     /**
      * Indica si es PK el campo
      */
@@ -40,5 +42,5 @@ class Attribute
     /**
      * Formato para fechas
      */
-    public $format = NULL;    
+    public $format = NULL;
 }
