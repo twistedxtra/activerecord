@@ -19,33 +19,30 @@
  * @copyright  Copyright (c) 2005-2010 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
- 
 // @see Attribute 
 require_once 'attribute.php';
 
 class Metadata
 {
+
     /**
      * Atributos de modelo (metadata)
      *
      * @var array
-     **/
+     * */
     private $_attributes = array();
- 
-	/**
-	 * Lista de atributos
-	 * 
-	 * @var array 
-	 */
-	private $_attributesList = array();
-    
+    /**
+     * Lista de atributos
+     *
+     * @var array
+     */
+    private $_attributesList = array();
     /**
      * Clave primaria
      *
      * @var string
      */
     private $_PK = NULL;
-    
     /**
      * Claves foraneas
      *
@@ -58,16 +55,16 @@ class Metadata
      *
      * @param string $attribute nombre de atributo
      * @return Attribute
-     **/
-    public function attribute ($attribute = NULL)
+     * */
+    public function attribute($attribute = NULL)
     {
-        if (! isset($this->_attributes[$attribute])) {
+        if (!isset($this->_attributes[$attribute])) {
             $this->_attributes[$attribute] = new Attribute();
-			$this->_attributesList[] = $attribute;
+            $this->_attributesList[] = $attribute;
         }
         return $this->_attributes[$attribute];
     }
-	
+
     /**
      * Obtiene los atributos
      *
@@ -77,7 +74,7 @@ class Metadata
     {
         return $this->_attributes;
     }
-    
+
     /**
      * Obtiene la lista de atributos
      *
@@ -87,44 +84,45 @@ class Metadata
     {
         return $this->_attributesList;
     }
-	
+
     /**
      * Asigna la clave primaria
      *
      * @param string $pk
-     **/
+     * */
     public function setPK($pk=NULL)
     {
         $this->_PK = $pk;
     }
-    
+
     /**
      * Obtiene la clave primaria
      *
      * @return string
-     **/
+     * */
     public function getPK()
     {
         return $this->_PK;
     }
-    
+
     /**
      * Asigna las claves foraneas
      *
      * @param array $fk
-     **/
+     * */
     public function setFK($fk=NULL)
     {
         $this->_FK = $fk;
     }
-    
+
     /**
      * Obtiene las claves foraneas
      *
      * @return array | NULL
-     **/
+     * */
     public function getFK()
     {
         return $this->_FK;
     }
+
 }

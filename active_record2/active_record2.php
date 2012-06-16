@@ -108,7 +108,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * Constructor de la class
      *
      */
-    public function __construct($data = NULL)
+    public function __construct(array $data = NULL)
     {
         if (is_array($data)) {
             $this->dump($data);
@@ -146,10 +146,12 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      *
      * @param array $data
      */
-    public function dump($data)
+    public function dump(array $data)
     {
         foreach ($data as $k => $v) {
-            $this->$k = $v;
+            if (!is_numeric($k)) {
+                $this->$k = $v;
+            }
         }
     }
 
@@ -391,9 +393,9 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function query($dbQuery, $fetchMode = NULL)
+    public function query(DbQuery $dbQuery, $fetchMode = NULL)
     {
-        $dbQuery->table($this->getTable());
+        $dbQuery->from($this->getTable());
 
         // Asigna el esquema si existe
         if ($this->_schema) {
@@ -543,7 +545,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @param array $data información a ser guardada
      * @return ActiveRecord 
      */
-    public function create($data = NULL)
+    public function create(array $data = NULL)
     {
         //inicializamos el validador
         $this->_initValidator();
@@ -662,7 +664,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * 
      * @param DbQuery $dbQuery
      */
-    protected function _wherePK($dbQuery)
+    protected function _wherePK(DbQuery $dbQuery)
     {
         // Obtiene la clave primaria
         $pk = $this->metadata()->getPK();
@@ -707,7 +709,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @param array $data información a ser guardada
      * @return Bool 
      */
-    public function update($data = NULL)
+    public function update(array $data = NULL)
     {
         //inicializamos el validador
         $this->_initValidator();
@@ -770,7 +772,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         return FALSE;
     }
 
-    public function save($data = NULL)
+    public function save(array $data = NULL)
     {
         return (isset($this->{$this->metadata()->getPK()}) && $this->exists()) ?
                 $this->update($data) : $this->create($data);
