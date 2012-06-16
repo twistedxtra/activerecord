@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -19,45 +20,45 @@
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-
 class MysqlDb extends DbAdapter
 {
+
     /**
      * Obtiene los datos de la tabla
      *
      * @param string $table
      * @param string $schema
      * @return array
-     **/
+     * */
     public function describe($table, $schema=null)
     {
         try {
             $results = $this->pdo()->query("DESCRIBE $table");
-			
+
             if ($results) {
-                require_once CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
+                require_once '/../metadata.php';
                 $metadata = new Metadata();
                 while ($field = $results->fetchObject()) {
                     //Nombre del Campo
                     $attribute = $metadata->attribute($field->Field);
                     //alias
-                    $attribute->alias =  ucwords(strtr($field->Field,'_-','  '));
-                    
+                    $attribute->alias = ucwords(strtr($field->Field, '_-', '  '));
+
                     // autoincremental
                     if ($field->Extra === 'auto_increment') {
                         $attribute->autoIncrement = TRUE;
                     }
-                    
+
                     // valor por defecto
                     $attribute->default = $field->Default;
-                    
+
                     //puede ser null?
-                    if($field->Null == 'NO'){
-                        $attribute->notNull = FALSE;
+                    if ($field->Null == 'NO') {
+                        $attribute->notNull = TRUE;
                     }
- 
+
                     //tipo de dato y longitud
-                    if(preg_match('/^(\w+)\((\w+)\)$/', $field->Type, $matches)) {
+                    if (preg_match('/^(\w+)\((\w+)\)$/', $field->Type, $matches)) {
                         $attribute->type = $matches[1];
                         $attribute->length = $matches[2];
                     } else {
@@ -66,7 +67,7 @@ class MysqlDb extends DbAdapter
                     }
 
                     //indices
-                    switch ($field->Key){
+                    switch ($field->Key) {
                         case 'PRI':
                             $metadata->setPK($field->Field);
                             $attribute->PK = TRUE;
@@ -86,4 +87,5 @@ class MysqlDb extends DbAdapter
         }
         return $metadata;
     }
+
 }
