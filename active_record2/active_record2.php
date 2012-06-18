@@ -427,7 +427,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 
         try {
             // Obtiene una instancia del adaptador y prepara la consulta
-            $this->_resultSet = DbAdapter::factory($this->_connection)->prepareDbQuery($dbQuery);
+            $this->_resultSet = DbAdapter::factory($this->_connection)->prepare($dbQuery);
 
             // Indica el modo de obtener los datos en el ResultSet
             $this->_fetchMode($fetchMode);

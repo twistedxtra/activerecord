@@ -309,7 +309,7 @@ abstract class DbAdapter
     public function prepare($query)
     {
         if ($query instanceof DbQuery){
-            return $this->prepare($this->query($dbQuery));
+            return $this->prepare($this->query($query));
         }
         // PDOStatement
         return $this->pdo()->prepare($query);
