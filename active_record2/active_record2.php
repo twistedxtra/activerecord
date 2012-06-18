@@ -19,10 +19,14 @@
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
+
+/**
+ * @see Metadata
+ */
+require_once '/../db_pool/metadata.php';
+
 // @see KumbiaModel
-require_once 'kumbia_model.php';
-// @see Validations
-require_once '/../validations.php';
+require_once '/../kumbia_model.php';
 
 /**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
@@ -62,6 +66,14 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @var strings
      */
     protected $_connection = NULL;
+
+    /**
+     * Instancias de metadata de modelos
+     *
+     * @var array
+     */
+    private static $_metadata = array();
+
     /**
      * Tabla origen de datos
      *
@@ -98,12 +110,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @var integer
      */
     protected $_fetchMode = self::FETCH_MODEL;
-    /**
-     * 
-     * @var Validations
-     */
-    protected $_validator = NULL;
-
+    
     /**
      * Constructor de la class
      *
@@ -117,7 +124,23 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         $this->initialize();
     }
 
-    private function _initValidator()
+    /**
+     * Obtiene la metatada de un modelo
+     *
+     * @return Metadata
+     */
+    public function metadata()
+    {
+        $model = get_class($this);
+
+        if (!isset(self::$_metadata[$model])) {
+            self::$_metadata[$model] = DbAdapter::factory($this->getConnection())->describe($this->getTable(), $this->getSchema());
+        }
+
+        return self::$_metadata[$model];
+    }
+
+    protected function _initValidator()
     {
         //llamamos al metodo que devuelve una instancia del validador;
         $v = $this->validations();
@@ -414,7 +437,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             return $this;
         } catch (PDOException $e) {
             // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
-            echo "error: ", $e->getMessage();
+            throw new KumbiaException($e->getMessage());
         }
     }
 
@@ -555,11 +578,11 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             $this->dump($data);
         }
 
-        // @see ActiveRecordValidator
-        require_once '/../active_record2/active_record_validator.php';
+        // @see KumbiaModelValidator
+        require_once '/../kumbia_model_validator.php';
 
         // Ejecuta la validacion
-        if (ActiveRecordValidator::validateOnCreate($this) === FALSE) {
+        if (KumbiaModelValidator::validateOnCreate($this) === FALSE) {
             return FALSE;
         }
 
@@ -618,19 +641,6 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
 
         // Ejecuta la consulta
         return $this->query($this->_dbQuery->delete());
-    }
-
-    /**
-     * Validadores
-     * 
-     * @return Validations
-     */
-    public function validations()
-    {
-        if (!$this->_validator instanceof Validations) {
-            $this->_validator = new Validations();
-        }
-        return $this->_validator;
     }
 
     /**
@@ -719,11 +729,11 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
             $this->dump($data);
         }
 
-        // @see ActiveRecordValidator
-        require_once 'active_record_validator.php';
+        // @see KumbiaModelValidator
+        require_once '/../kumbia_model_validator.php';
 
         // Ejecuta la validacion
-        if (ActiveRecordValidator::validateOnUpdate($this) === FALSE) {
+        if (KumbiaModelValidator::validateOnUpdate($this) === FALSE) {
             return FALSE;
         }
 

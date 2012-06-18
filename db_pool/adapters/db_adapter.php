@@ -20,6 +20,10 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
+
+// @see DbQuery
+require_once '/../db_query.php';
+
 /**
  * @see TableMetadata
  */
@@ -109,7 +113,7 @@ abstract class DbAdapter
      * @return string
      * @throw KumbiaException
      */
-    public function query($dbQuery)
+    public function query(DbQuery $dbQuery)
     {
         $sqlArray = $dbQuery->getSqlArray();
 
@@ -299,25 +303,15 @@ abstract class DbAdapter
     /**
      * Prepara la consulta SQL
      * 
-     * @param string $sql
+     * @param string|DbQuery $query string con el sql ó un objeto DbQuery
      * @return PDOStatement
      */
-    public function prepare($sql)
+    public function prepare($query)
     {
+        if ($query instanceof DbQuery){
+            return $this->prepare($this->query($dbQuery));
+        }
         // PDOStatement
-        return $this->pdo()->prepare($sql);
+        return $this->pdo()->prepare($query);
     }
-
-    /**
-     * Prepara la consulta SQL asociada al objeto dbQuery
-     *
-     * @param DbQuery objeto de consulta
-     * @return PDOStatement
-     */
-    public function prepareDbQuery($dbQuery)
-    {
-        // Prepara el dbQuery
-        return $this->prepare($this->query($dbQuery));
-    }
-
 }

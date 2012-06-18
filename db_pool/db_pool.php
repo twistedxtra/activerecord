@@ -25,11 +25,6 @@
 require_once 'adapters/db_adapter.php';
 
 /**
- * @see DbQuery
- * */
-require_once 'db_query.php';
-
-/**
  * Clase que maneja el pool de conexiones
  *
  */

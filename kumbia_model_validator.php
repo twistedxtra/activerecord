@@ -12,7 +12,7 @@
  * obtain it through the world-wide-web, please send an email
  * to license@kumbiaphp.com so we can send you a copy immediately.
  *
- * Validador para ActiveRecord
+ * Validador para KumbiaModel 
  * 
  * @category   Kumbia
  * @package    ActiveRecord
@@ -22,16 +22,16 @@
 // @see ValidatorInterface
 require_once 'validators/validator_interface.php';
 
-class ActiveRecordValidator
+class KumbiaModelValidator
 {
 
     /**
      * Validar en caso de crear
      * 
-     * @param ActiveRecord $object
+     * @param KumbiaModel $object
      * @return boolean
      */
-    public final static function validateOnCreate($object)
+    public final static function validateOnCreate(KumbiaModel $object)
     {
         return self::_validate($object);
     }
@@ -39,10 +39,10 @@ class ActiveRecordValidator
     /**
      * Validar en caso de actualizar
      * 
-     * @param ActiveRecord $object
+     * @param KumbiaModel $object
      * @return boolean
      */
-    public static function validateOnUpdate($object)
+    public static function validateOnUpdate(KumbiaModel $object)
     {
         return self::_validate($object, TRUE);
     }
@@ -50,11 +50,11 @@ class ActiveRecordValidator
     /**
      * Efectua las validaciones
      * 
-     * @param ActiveRecord $object
+     * @param KumbiaModel $object
      * @param boolean $update
      * @return boolean
      */
-    private static function _validate($object, $update = FALSE)
+    private static function _validate(KumbiaModel $object, $update = FALSE)
     {
         // Obtiene los validadores
         $validators = $object->validations()->getValidations();

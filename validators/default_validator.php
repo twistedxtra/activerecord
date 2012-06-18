@@ -13,7 +13,7 @@
  * obtain it through the world-wide-web, please send an email
  * to license@kumbiaphp.com so we can send you a copy immediately.
  *
- * Realiza validacion de longitud de caracteres máxima para campo
+ * Realiza validacion para campo con valor por defecto
  *
  * @category   Kumbia
  * @package    ActiveRecord
@@ -21,30 +21,27 @@
  * @copyright  Copyright (c) 2005-2010 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-class MaxLengthValidator implements ValidatorInterface
+class DefaultValidator implements ValidatorInterface
 {
 
     /**
      * Metodo para validar
      *
-     * @param ActiveRecord $object objeto ActiveRecord
+     * @param KumbiaModel $object objeto KumbiaModel 
      * @param string $column nombre de columna a validar
      * @param array $params parametros de configuracion
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    public static function validate(KumbiaModel $object, $column, $params = NULL, $update = FALSE)
     {
-        if (strlen($object->$column) > $params['max']) {
-            if (isset($params['message'])) {
-                Flash::error($params['message']);
-            } else {
-                Flash::error("El campo $column debe tener una cantidad de caracteres maxima de {$params['max']}");
-            }
-
+        // Se ha indicado el campo y no se considera nulo, por lo tanto no se tomara por defecto
+        if (isset($object->$column) && $object->$column != '') {
+            // Se considera con valor por defecto cuando sea nulo
             return FALSE;
         }
 
+        // Valor por defecto
         return TRUE;
     }
 

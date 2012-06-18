@@ -13,7 +13,8 @@
  * obtain it through the world-wide-web, please send an email
  * to license@kumbiaphp.com so we can send you a copy immediately.
  *
- * Realiza validacion para campo con valor por defecto
+ * Realiza validacion para campo con longitud de caracteres
+ * comprendida en un rango de valores
  *
  * @category   Kumbia
  * @package    ActiveRecord
@@ -21,27 +22,34 @@
  * @copyright  Copyright (c) 2005-2010 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-class DefaultValidator implements ValidatorInterface
+class LengthBetweenValidator implements ValidatorInterface
 {
 
     /**
      * Metodo para validar
      *
-     * @param ActiveRecord $object objeto ActiveRecord
+     * @param KumbiaModel $object objeto KumbiaModel
      * @param string $column nombre de columna a validar
      * @param array $params parametros de configuracion
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-    public static function validate($object, $column, $params = NULL, $update = FALSE)
+    public static function validate(KumbiaModel $object, $column, $params = NULL, $update = FALSE)
     {
-        // Se ha indicado el campo y no se considera nulo, por lo tanto no se tomara por defecto
-        if (isset($object->$column) && $object->$column != '') {
-            // Se considera con valor por defecto cuando sea nulo
+        $int_options = array('options' => array(
+                'min_range' => $params['min'],
+                'max_range' => $params['max']
+                ));
+        if (!filter_var($object->$column, FILTER_VALIDATE_INT, $int_options)) {
+            if (isset($params['message'])) {
+                Flash::error($params['message']);
+            } else {
+                Flash::error("El campo $column debe tener una cantidad de caracteres comprendida entre $min y $max");
+            }
+
             return FALSE;
         }
 
-        // Valor por defecto
         return TRUE;
     }
 

@@ -13,7 +13,7 @@
  * obtain it through the world-wide-web, please send an email
  * to license@kumbiaphp.com so we can send you a copy immediately.
  *
- * Interface para validador de ActiveRecord
+ * Realiza validacion para campo con valor no nulo
  *
  * @category   Kumbia
  * @package    ActiveRecord
@@ -21,18 +21,31 @@
  * @copyright  Copyright (c) 2005-2010 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-interface ValidatorInterface
+class NotNullValidator implements ValidatorInterface
 {
 
     /**
      * Metodo para validar
      *
-     * @param ActiveRecord $object objeto ActiveRecord
+     * @param KumbiaModel $object objeto KumbiaModel 
      * @param string $column nombre de columna a validar
      * @param array $params parametros de configuracion
      * @param boolean $update indica si es operacion de actualizacion
      * @return boolean
      */
-    public static function validate($object, $column, $params = NULL, $update = FALSE);
-}
+    public static function validate(KumbiaModel $object, $column, $params = NULL, $update = FALSE)
+    {
+        if (!isset($object->$column) || NULL === $object->$column || '' === $object->$column) {
+            if ($params && isset($params['message'])) {
+                Flash::error($params['message']);
+            } else {
+                Flash::error("El campo $column no debe ser Nulo");
+            }
 
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+}

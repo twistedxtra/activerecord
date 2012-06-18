@@ -12,10 +12,9 @@
  * obtain it through the world-wide-web, please send an email
  * to license@kumbiaphp.com so we can send you a copy immediately.
  */
-/**
- * @see Metadata
- */
-require '/../db_pool/metadata.php';
+
+// @see Validations
+require_once 'validations.php';
 
 /** Implementación de Modelo
  * 
@@ -28,26 +27,34 @@ abstract class KumbiaModel
 {
 
     /**
-     * Instancias de metadata de modelos
-     *
-     * @var array
+     * 
+     * @var Validations
      */
-    private static $_metadata = array();
+    protected $_validator = NULL;
 
     /**
-     * Obtiene la metatada de un modelo
-     *
-     * @return Metadata
+     * Validadores
+     * 
+     * @return Validations
      */
-    public function metadata()
+    public function validations()
     {
-        $model = get_class($this);
-
-        if (!isset(self::$_metadata[$model])) {
-            self::$_metadata[$model] = DbAdapter::factory($this->getConnection())->describe($this->getTable(), $this->getSchema());
+        if (!$this->_validator instanceof Validations) {
+            $this->_validator = new Validations();
         }
-
-        return self::$_metadata[$model];
+        return $this->_validator;
     }
 
+    public function isValid(){
+
+        if ( $this instanceof ActiveRecord2 ){
+            $this->_initValidator();
+        }
+
+        // @see KumbiaModelValidator
+        require_once 'kumbia_model_validator.php';
+
+        // Ejecuta la validacion
+        return KumbiaModelValidator::validateOnCreate($this) !== FALSE;
+    }
 }
