@@ -19,7 +19,6 @@
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-
 /**
  * @see Metadata
  */
@@ -66,14 +65,12 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @var strings
      */
     protected $_connection = NULL;
-
     /**
      * Instancias de metadata de modelos
      *
      * @var array
      */
     private static $_metadata = array();
-
     /**
      * Tabla origen de datos
      *
@@ -110,7 +107,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
      * @var integer
      */
     protected $_fetchMode = self::FETCH_MODEL;
-    
+
     /**
      * Constructor de la class
      *
@@ -656,6 +653,7 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         }
 
         $this->_dbQuery->columns("COUNT($column) AS n");
+
         return $this->first(self::FETCH_OBJ)->n;
     }
 
@@ -811,6 +809,13 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         }
 
         return FALSE;
+    }
+
+    public function paginate($page, $per_page = 10, $fetchMode = NULL)
+    {
+        require_once 'paginate/paginate.php';
+
+        return Paginator::paginate($this, $this->_dbQuery, $fetchMode, $page, $per_page);
     }
 
 }
