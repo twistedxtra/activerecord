@@ -815,7 +815,13 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
     {
         require_once 'paginate/paginate.php';
 
-        return Paginator::paginate($this, $this->_dbQuery, $fetchMode, $page, $per_page);
+        $this->setFetchMode($fetchMode);
+
+        //var_dump($fetchMode,$this->_fetchMode);
+
+        $this->_dbQuery || $this->get();
+
+        return Paginator::paginate($this, $this->_dbQuery, $page, $per_page);
     }
 
 }
