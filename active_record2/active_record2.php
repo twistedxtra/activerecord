@@ -824,4 +824,31 @@ class ActiveRecord2 extends KumbiaModel implements Iterator
         return Paginator::paginate($this, $this->_dbQuery, $page, $per_page);
     }
 
+    /**
+     * Inicia una transacci&oacute;n si es posible
+     *
+     */
+    public function begin()
+    {
+        return DbAdapter::factory($this->_connection)->pdo()->beginTransaction();
+    }
+
+    /**
+     * Cancela una transacci&oacute;n si es posible
+     *
+     */
+    public function rollback()
+    {
+        return DbAdapter::factory($this->_connection)->pdo()->rollBack();
+    }
+
+    /**
+     * Hace commit sobre una transacci&oacute;n si es posible
+     *
+     */
+    public function commit()
+    {
+        return DbAdapter::factory($this->_connection)->pdo()->commit();
+    }
+
 }
