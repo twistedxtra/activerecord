@@ -69,7 +69,7 @@ class Paginator
      *
      * @return object
      * */
-    public static function paginate(ActiveRecord2 $model,  DbQuery $query, $fetchMode = NULL, $page, $per_page)
+    public static function paginate(ActiveRecord2 $model,  DbQuery $query, $page, $per_page)
     {
         $arrayQuery = $query->getSqlArray() + array('columns' => '*');
         
@@ -78,7 +78,7 @@ class Paginator
 
         $query->columns($arrayQuery['columns'])->limit($per_page)->offset($offset);
 
-        $items = $model->findAll($fetchMode);
+        $items = $model->findAll();
         
         $object = new stdClass();
 
