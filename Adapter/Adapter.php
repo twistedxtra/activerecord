@@ -21,10 +21,13 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-namespace ActiveRecord\Adapters;
+namespace ActiveRecord\Adapter;
 
+use ActiveRecord\Config\Config;
 use ActiveRecord\DbPool\DbPool;
 use ActiveRecord\Query\DbQuery;
+use ActiveRecord\Config\Parameters;
+use PDO;
 
 abstract class Adapter
 {
@@ -41,7 +44,7 @@ abstract class Adapter
      *
      * @var string
      */
-    protected $_connection;
+    protected $config;
 
     /**
      * Genera la descripcion de una tabla
@@ -57,9 +60,9 @@ abstract class Adapter
      *
      * @param string $connection nombre de conexion en databases.ini
      */
-    public function __construct($connection)
+    public function __construct(Parameters $config)
     {
-        $this->_connection = $connection;
+        $this->config = $config;
     }
 
     /**
@@ -69,39 +72,28 @@ abstract class Adapter
      * @return Adapter
      * @throw KumbiaException
      */
-    public static function factory($connection = NULL)
+    public static function factory($configName = 'default')
     {
-        // Carga la conexion por defecto
-        if (!$connection) {
-            $connection = Config::get('config.application.database');
-        }
 
         // Si no existe el Singleton
-        if (!isset(self::$_adapters[$connection])) {
-            // Lee la configuracion de base de datos
-            $databases = Config::read('databases');
+        if (!isset(self::$_adapters[$configName])) {
 
-            if (!isset($databases[$connection])) {
-                throw new KumbiaException("No existe la conexion $connection en databases.ini");
+            if (!$config = Config::get($configName)) {
+                throw new \Exception("No existe la configuración de conexion <b>$configName</b>");
             }
-
-            $database = $databases[$connection];
+            if (!$config->getType()) {
+                throw new \Exception("Debe definir el tipo de base de datos a la que se conectará (mysql, postgres, oracle, etc..)");
+            }
 
             // Genera el nombre de clase
-            $Class = ucfirst($database['type']) . 'Db';
-
-            // Si no existe la clase la carga
-            if (!class_exists($Class, FALSE)) {
-                // Carga la clase
-                require CORE_PATH . "libs/ActiveRecord/db_pool/adapters/{$database['type']}_db.php";
-            }
+            $Class = 'ActiveRecord\\Adapter\\' . ucfirst($config->getType());
 
             // Instancia el adaptador
-            self::$_adapters[$connection] = new $Class($connection);
+            self::$_adapters[$configName] = new $Class($config);
         }
 
         // Retorna el adaptador
-        return self::$_adapters[$connection];
+        return self::$_adapters[$configName];
     }
 
     /**
@@ -124,7 +116,7 @@ abstract class Adapter
             return $this->{"_{$sqlArray['command']}"}($sqlArray);
         }
 
-        throw new KumbiaException("Debe indicar un comando de consulta SQL");
+        throw new \Exception("Debe indicar un comando de consulta SQL");
     }
 
     /**
@@ -284,7 +276,7 @@ abstract class Adapter
         if (isset($sqlArray['offset'])) {
             $sql .= " OFFSET {$sqlArray['offset']}";
         }
-
+        
         return $sql;
     }
 
@@ -295,7 +287,7 @@ abstract class Adapter
      */
     public function pdo()
     {
-        return DbPool::factory($this->_connection);
+        return DbPool::factory($this->config);
     }
 
     /**

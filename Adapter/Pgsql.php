@@ -21,9 +21,9 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-namespace ActiveRecord\Adapters;
+namespace ActiveRecord\Adapter;
 
-use ActiveRecord\Adapters\Adapter;
+use ActiveRecord\Adapter\Adapter;
 use ActiveRecord\Metadata\Metadata;
 
 class Pgsql extends Adapter
