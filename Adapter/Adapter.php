@@ -109,7 +109,7 @@ abstract class Adapter
 
         // Verifica si se indico una table
         if (!isset($sqlArray['table'])) {
-            throw new KumbiaException("Debe indicar una tabla para efectuar la consulta");
+            throw new \Exception("Debe indicar una tabla para efectuar la consulta");
         }
 
         if (isset($sqlArray['command'])) {
@@ -276,7 +276,7 @@ abstract class Adapter
         if (isset($sqlArray['offset'])) {
             $sql .= " OFFSET {$sqlArray['offset']}";
         }
-        
+
         return $sql;
     }
 
@@ -314,9 +314,27 @@ abstract class Adapter
         return $this->pdo()->prepare($this->query($dbQuery));
     }
 
+    /**
+     *
+     * @return \ActiveRecord\Query\DbQuery 
+     */
     public function createQuery()
     {
         return new DbQuery();
+    }
+
+    /**
+     *
+     * @param DbQuery $query
+     * @return \PDOStatement 
+     */
+    public function execute(DbQuery $query)
+    {
+        $statement = $this->pdo()->query($this->query($query));
+        
+        $statement->execute($query->getBind());
+        
+        return $statement;
     }
 
 }
