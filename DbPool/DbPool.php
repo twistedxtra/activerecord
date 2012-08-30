@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,17 +23,22 @@
 
 namespace ActiveRecord\DbPool;
 
+use ActiveRecord\Config\Config;
+use ActiveRecord\Config\Parameters;
+use \PDO;
+
 /**
  * Clase que maneja el pool de conexiones
  *
  */
 class DbPool
 {
+
     /**
      * Singleton de conexiones a base de datos
      *
      * @var array
-     **/
+     * */
     protected static $_connections = array();
 
     /**
@@ -43,39 +49,32 @@ class DbPool
      * @param boolean $new nueva conexion
      * @return db
      */
-    public static function factory($connection=NULL)
+    public static function factory(Parameters $config)
     {
-        // carga la conexion por defecto
-        if (!$connection) {
-            $connection = Config::get('config.application.database');
-        }
-        
         //Si existe la conexion singleton
-        if (isset(self::$_connections[$connection])) {
-            return self::$_connections[$connection];
+        if (isset(self::$_connections[$config->getId()])) {
+            return self::$_connections[$config->getId()];
         }
-        
+
         // check for PDO extension
         if (!extension_loaded('pdo')) {
             throw new KumbiaException('La Extension PDO es requerida por este adaptador, pero la extension no esta cargada');
         }
-        
-        $databases = Config::read('databases');
-        $config = $databases[$connection];
-		
-		// carga los valores por defecto para la conexion
-		$default = array ('port' => 0, 'dbname' => NULL, 'host' => 'localhost', 'username' => NULL, 'password' => NULL);
-		$config = $config + $default;
 
         try {
             // conecta con pdo
-            self::$_connections[$connection] = new PDO($config['type'] . ':host=' . $config['host'].';dbname='.$config['dbname'], $config['username'], $config['password']);
-            self::$_connections[$connection]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-            return self::$_connections[$connection];
-        	
-        } catch (PDOException $e) {
-            throw new KumbiaException($e->getMessage());
+            self::$_connections[$config->getId()] = new PDO(
+                            $config->getType() . ':host=' . $config->getHost() . ';dbname=' . $config->getDbName(),
+                            $config->getUsername(),
+                            $config->getPassword());
+
+            self::$_connections[$config->getId()]
+                    ->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            return self::$_connections[$config->getId()];
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage());
         }
     }
+
 }
