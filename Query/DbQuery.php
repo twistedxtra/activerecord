@@ -20,6 +20,8 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
+namespace ActiveRecord\Query;
+
 class DbQuery
 {
     /**

@@ -20,15 +20,7 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-/**
- * @see DbAdapter
- **/
-require CORE_PATH . 'libs/ActiveRecord/db_pool/adapters/db_adapter.php';
-
-/**
- * @see DbQuery
- **/
-require CORE_PATH . 'libs/ActiveRecord/db_pool/db_query.php';
+namespace ActiveRecord\DbPool;
 
 /**
  * Clase que maneja el pool de conexiones

@@ -1,4 +1,7 @@
 <?php
+
+namespace ActiveRecord\Metadata;
+
 class Attribute 
 {
     /**

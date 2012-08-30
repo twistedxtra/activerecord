@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -19,8 +20,15 @@
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
-class PgsqlDb extends DbAdapter
+
+namespace ActiveRecord\Adapters;
+
+use ActiveRecord\Adapters\Adapter;
+use ActiveRecord\Metadata\Metadata;
+
+class Pgsql extends Adapter
 {
+
     /**
      * Obtiene la metadata de una Tabla
      * 
@@ -29,7 +37,7 @@ class PgsqlDb extends DbAdapter
      * @return Rows
      * 
      */
-    public function describe($table, $schema=null)
+    public function describe($table, $schema = null)
     {
         $sql = "SELECT c.column_name as name,
                 CASE
@@ -54,17 +62,16 @@ class PgsqlDb extends DbAdapter
         try {
             $prepare = $this->prepare($sql);
             //ejecutando la consulta preparada
-            $results = $prepare->execute(array('database'=>'test', 'schema'=>'public', 'table'=>'prueba'));
+            $results = $prepare->execute(array('database' => 'test', 'schema' => 'public', 'table' => 'prueba'));
             if ($results) {
-                require_once CORE_PATH . 'libs/ActiveRecord/db_pool/metadata.php';
                 $metadata = new Metadata();
                 while ($field = $prepare->fetchObject()) {
                     //Nombre del Campo
                     $attribute = $metadata->attribute($field->name);
                     //alias
-                    $attribute->alias =  ucwords(strtr($field->name,'_-','  '));
+                    $attribute->alias = ucwords(strtr($field->name, '_-', '  '));
                     //valor por defecto
-                    if (! is_null($field->default)) {
+                    if (!is_null($field->default)) {
                         if (strpos($field->default, 'nextval(') !== FALSE) {
                             $attribute->autoIncrement = TRUE;
                         } elseif ($field->type == 'serial' || $field->type == 'bigserial') {
@@ -74,19 +81,19 @@ class PgsqlDb extends DbAdapter
                         }
                     }
                     //puede ser null?
-                    if($field->null == 'NO'){
+                    if ($field->null == 'NO') {
                         $attribute->notNull = FALSE;
                     }
                     //Relaciones
-                    if(substr($field->name, strlen($field->name) -3, 3) == '_id'){
-                        $attribute->alias =  ucwords(strtr($field->name,'_-','  '));
+                    if (substr($field->name, strlen($field->name) - 3, 3) == '_id') {
+                        $attribute->alias = ucwords(strtr($field->name, '_-', '  '));
                     }
                     //tipo de dato
                     $attribute->type = $field->type;
                     //longitud
                     $attribute->length = $field->length;
                     //indices
-                    switch ($field->index){
+                    switch ($field->index) {
                         case 'PRI':
                             $metadata->setPK($field->name);
                             $attribute->PK = TRUE;
@@ -101,9 +108,10 @@ class PgsqlDb extends DbAdapter
                     }
                 }
             }
-        } catch (PDOException $e) {
-            throw new KumbiaException($e->getMessage());
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage());
         }
         return $metadata;
     }
+
 }

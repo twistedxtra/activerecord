@@ -19,6 +19,11 @@
  * @copyright  Copyright (c) 2005-2010 KumbiaPHP Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
+
+namespace ActiveRecord\DbPool;
+
+use \Iterator;
+
 class ResultSet implements Iterator
 {
     /**
@@ -92,7 +97,7 @@ class ResultSet implements Iterator
     public function current ()
     {
         if (! $this->valid()) {
-            throw new KumbiaException('Unable to retrieve current row.');
+            throw new \PDOException('Unable to retrieve current row.');
         }
         return $this->fetchObject();
     }
