@@ -18,9 +18,15 @@ class Parameters
     protected $host = 'localhost';
     protected $type;
 
-    function __construct($id)
+    function __construct($id, $config)
     {
         $this->id = $id;
+        isset($config['username']) && $this->username = $config['username'];
+        isset($config['password']) && $this->password = $config['password'];
+        isset($config['name']) && $this->dbName = $config['name'];
+        isset($config['host']) && $this->host = $config['host'];
+        isset($config['type']) && $this->type = $config['type'];
+        isset($config['port']) && $this->port = $config['port'];
     }
 
     public function getId()
