@@ -17,6 +17,9 @@ class Config
 
     public static function add(Parameters $param)
     {
+        if ( !self::$defaultConectionName ){
+            self::setDefault($param->getId());
+        }
         if (!self::has($param->getId())) {
             self::$parameters[$param->getId()] = $param;
         }
