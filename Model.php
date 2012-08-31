@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -27,7 +28,7 @@ use \Iterator;
 use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Adapter\Adapter;
 use ActiveRecord\Paginator\Paginator;
-use ActiveRecord\Model\ActiveRecordException;
+use ActiveRecord\Exception\ActiveRecordException;
 
 /**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
@@ -407,7 +408,7 @@ class Model implements Iterator
             $dbQuery->schema($this->schema);
         }
 
-        try {
+//        try {
             // Obtiene una instancia del adaptador y prepara la consulta
             $this->resultSet = Adapter::factory($this->connection)
                     ->prepareDbQuery($dbQuery);
@@ -418,10 +419,9 @@ class Model implements Iterator
             // Ejecuta la consulta
             $this->resultSet->execute($dbQuery->getBind());
             return $this;
-        } catch (\PDOException $e) {
-            // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
-            echo $this->resultSet->errorCode();
-        }
+//        } catch (\PDOException $e) {
+//            // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
+//        }
     }
 
     /**
@@ -445,9 +445,7 @@ class Model implements Iterator
      */
     public function find($fetchMode = NULL)
     {
-        if (!$this->dbQuery) {
-            $this->get();
-        }
+        $this->dbQuery || $this->get();
         return $this->query($this->dbQuery->select(), $fetchMode);
     }
 
@@ -470,9 +468,7 @@ class Model implements Iterator
      */
     public function first($fetchMode = NULL)
     {
-        if (!$this->dbQuery) {
-            $this->get();
-        }
+        $this->dbQuery || $this->get();
 
         // Realiza la busqueda y retorna el objeto ActiveRecord
         return $this->query($this->dbQuery->select()->limit(1)
@@ -514,7 +510,7 @@ class Model implements Iterator
         } else {
             $this->get()->where("$column = :value")->bindValue('value', $value);
         }
-        return $this->find($fetchMode);
+        return $this->find($fetchMode)->resultSet->fetchAll();
     }
 
     /**
@@ -608,9 +604,7 @@ class Model implements Iterator
      */
     public function updateAll($data)
     {
-        if (!$this->dbQuery) {
-            $this->get();
-        }
+        $this->dbQuery || $this->get();
 
         // Ejecuta la consulta
         return $this->query($this->dbQuery->update($data));
@@ -623,10 +617,7 @@ class Model implements Iterator
      */
     public function deleteAll()
     {
-        if (!$this->dbQuery) {
-            $this->get();
-        }
-
+        $this->dbQuery || $this->get();
         // Ejecuta la consulta
         return $this->query($this->dbQuery->delete());
     }
@@ -649,9 +640,7 @@ class Model implements Iterator
      */
     public function count($column = '*')
     {
-        if (!$this->dbQuery) {
-            $this->get();
-        }
+        $this->dbQuery || $this->get();
 
         $this->dbQuery->columns("COUNT($column) AS n");
         return $this->first(self::FETCH_OBJ)->n;
@@ -696,7 +685,7 @@ class Model implements Iterator
     }
 
     /**
-     * Verifica si esta persistente en la BD el objeto actual en la bd
+     * Verifica si esta persistente en la BD el objeto actual
      * 
      * @return boolean
      */
