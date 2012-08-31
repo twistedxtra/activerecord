@@ -72,8 +72,10 @@ abstract class Adapter
      * @return Adapter
      * @throw KumbiaException
      */
-    public static function factory($configName = 'default')
+    public static function factory($configName = NULL)
     {
+        //si es null establece "default"
+        $configName || $configName = Config::getDefault();
 
         // Si no existe el Singleton
         if (!isset(self::$_adapters[$configName])) {
@@ -331,9 +333,9 @@ abstract class Adapter
     public function execute(DbQuery $query)
     {
         $statement = $this->pdo()->query($this->query($query));
-        
+
         $statement->execute($query->getBind());
-        
+
         return $statement;
     }
 
