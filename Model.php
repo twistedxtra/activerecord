@@ -503,7 +503,17 @@ class Model implements Iterator
      */
     public function findAllBy($column, $value, $fetchMode = NULL)
     {
-        $this->get()->where("$column = :value")->bindValue('value', $value);
+        if (is_array($value)) {
+            $query = $this->get();
+            $in = array();
+            foreach ($value as $k => $v) {
+                $in[] = ":in_$k";
+                $query->bindValue("in_$k", $v);
+            }
+            $query->where("$column IN (" . join(',', $in) . ")");
+        } else {
+            $this->get()->where("$column = :value")->bindValue('value', $value);
+        }
         return $this->find($fetchMode);
     }
 
