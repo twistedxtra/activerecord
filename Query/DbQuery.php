@@ -29,7 +29,7 @@ class DbQuery
      *
      * @var array
      */
-    protected $_sql = array();
+    protected $sql = array();
 
     /**
      * Clausula DISTINCT
@@ -39,7 +39,7 @@ class DbQuery
      */
     public function distinct($distinct) 
     {
-        $this->_sql['distinct'] = $distinct;
+        $this->sql['distinct'] = $distinct;
         return $this;
     }
 
@@ -51,7 +51,7 @@ class DbQuery
      */
     public function where($conditions) 
     {
-        $this->_sql['where'][] = $this->_where($conditions);
+        $this->sql['where'][] = $this->_where($conditions);
         return $this;
     }
 	
@@ -63,7 +63,7 @@ class DbQuery
      */
     public function whereOr($conditions)
     {
-        $this->_sql['where'][] = $this->_where($conditions, FALSE);
+        $this->sql['where'][] = $this->_where($conditions, FALSE);
         return $this;
     }
 	
@@ -77,7 +77,7 @@ class DbQuery
     protected function _where($conditions, $type=TRUE)
     {
         $cond=NULL;
-        if(isset($this->_sql['where'])){
+        if(isset($this->sql['where'])){
             if($type===TRUE){
                 $cond = ' AND ';
             }else{
@@ -95,7 +95,7 @@ class DbQuery
     public function bind($bind)
     {
         foreach ($bind as $k => $v) {
-        	$this->_sql['bind'][":$k"] = $v;
+        	$this->sql['bind'][":$k"] = $v;
         }
         return $this;
     }
@@ -109,7 +109,7 @@ class DbQuery
      */
     public function bindValue($bind, $value)
     {
-        $this->_sql['bind'][":$bind"] = $value;
+        $this->sql['bind'][":$bind"] = $value;
         return $this;
     }
 	
@@ -120,8 +120,8 @@ class DbQuery
      */
     public function getBind()
     {
-        if(isset($this->_sql['bind'])){
-            return $this->_sql['bind'];
+        if(isset($this->sql['bind'])){
+            return $this->sql['bind'];
         }
         return NULL;
     }
@@ -135,7 +135,7 @@ class DbQuery
      */
     public function join($table, $conditions) 
     {
-        $this->_sql['join'][] = array('table' => $table, 'conditions' => $conditions);
+        $this->sql['join'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -148,7 +148,7 @@ class DbQuery
      */
     public function leftJoin($table, $conditions) 
     {
-        $this->_sql['leftJoin'][] = array('table' => $table, 'conditions' => $conditions);
+        $this->sql['leftJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -161,7 +161,7 @@ class DbQuery
      */
     public function rightJoin($table, $conditions) 
     {
-        $this->_sql['rightJoin'][] = array('table' => $table, 'conditions' => $conditions);
+        $this->sql['rightJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -174,7 +174,7 @@ class DbQuery
      */
     public function fullJoin($table, $conditions) 
     {
-        $this->_sql['fullJoin'][] = array('table' => $table, 'conditions' => $conditions);
+        $this->sql['fullJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
     
@@ -186,7 +186,7 @@ class DbQuery
      */
     public function table($table) 
     {
-        $this->_sql['table'] = $table;
+        $this->sql['table'] = $table;
         return $this;
     }
 
@@ -198,7 +198,7 @@ class DbQuery
      */
     public function schema($schema) 
     {
-        $this->_sql['schema'] = $schema;
+        $this->sql['schema'] = $schema;
         return $this;
     }
 
@@ -210,7 +210,7 @@ class DbQuery
      */
     public function order($criteria) 
     {
-        $this->_sql['order'] = $criteria;
+        $this->sql['order'] = $criteria;
         return $this;
     }
     
@@ -222,7 +222,7 @@ class DbQuery
      */
     public function group($columns) 
     {
-        $this->_sql['group'] = $columns;
+        $this->sql['group'] = $columns;
         return $this;
     }    
 
@@ -234,7 +234,7 @@ class DbQuery
      */
     public function having($conditions) 
     {
-        $this->_sql['having'] = $conditions;
+        $this->sql['having'] = $conditions;
         return $this;
     }
 
@@ -246,7 +246,7 @@ class DbQuery
      */
     public function limit($limit) 
     {
-        $this->_sql['limit'] = $limit;
+        $this->sql['limit'] = $limit;
         return $this;
     }   
 
@@ -258,7 +258,7 @@ class DbQuery
      */
     public function offset($offset) 
     {
-        $this->_sql['offset'] = $offset;
+        $this->sql['offset'] = $offset;
         return $this;
     }  
 
@@ -270,7 +270,7 @@ class DbQuery
      */
     public function select($columns = NULL) 
     {
-        $this->_sql['command'] = 'select';
+        $this->sql['command'] = 'select';
 		
 		if($columns) {
 			$this->columns($columns);
@@ -286,7 +286,7 @@ class DbQuery
      */
     public function columns($columns)
     {
-        $this->_sql['columns'] = $columns;
+        $this->sql['columns'] = $columns;
 		return $this;
     }
 	
@@ -297,7 +297,7 @@ class DbQuery
      */
     public function delete() 
     {
-        $this->_sql['command'] = 'delete';
+        $this->sql['command'] = 'delete';
         return $this;
     }
 
@@ -310,8 +310,8 @@ class DbQuery
     public function update($data) 
     {
         $this->bind($data);
-        $this->_sql['data'] = $data;
-		$this->_sql['command'] = 'update';
+        $this->sql['data'] = $data;
+		$this->sql['command'] = 'update';
         return $this;
     }
     
@@ -324,8 +324,8 @@ class DbQuery
     public function insert($data) 
     {
         $this->bind($data);
-        $this->_sql['data'] = $data;
-		$this->_sql['command'] = 'insert';
+        $this->sql['data'] = $data;
+		$this->sql['command'] = 'insert';
         return $this;
     }
     
@@ -336,6 +336,6 @@ class DbQuery
      */
     public function getSqlArray()
     {
-        return $this->_sql;
+        return $this->sql;
     }
 }

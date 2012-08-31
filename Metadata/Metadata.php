@@ -33,7 +33,7 @@ class Metadata
      *
      * @var array
      * */
-    private $_attributes = array();
+    private $attributes = array();
 
     /**
      * Lista de atributos

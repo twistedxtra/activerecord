@@ -37,7 +37,7 @@ abstract class Adapter
      * 
      * @var array
      */
-    private static $_adapters = array();
+    private static $adapters = array();
 
     /**
      * Nombre de conexion
@@ -78,7 +78,7 @@ abstract class Adapter
         $configName || $configName = Config::getDefault();
 
         // Si no existe el Singleton
-        if (!isset(self::$_adapters[$configName])) {
+        if (!isset(self::$adapters[$configName])) {
 
             if (!$config = Config::get($configName)) {
                 throw new \Exception("No existe la configuración de conexion <b>$configName</b>");
@@ -91,11 +91,11 @@ abstract class Adapter
             $Class = 'ActiveRecord\\Adapter\\' . ucfirst($config->getType());
 
             // Instancia el adaptador
-            self::$_adapters[$configName] = new $Class($config);
+            self::$adapters[$configName] = new $Class($config);
         }
 
         // Retorna el adaptador
-        return self::$_adapters[$configName];
+        return self::$adapters[$configName];
     }
 
     /**

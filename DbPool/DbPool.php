@@ -39,7 +39,7 @@ class DbPool
      *
      * @var array
      * */
-    protected static $_connections = array();
+    protected static $connections = array();
 
     /**
      * Realiza una conexión directa al motor de base de datos
@@ -52,8 +52,8 @@ class DbPool
     public static function factory(Parameters $config)
     {
         //Si existe la conexion singleton
-        if (isset(self::$_connections[$config->getId()])) {
-            return self::$_connections[$config->getId()];
+        if (isset(self::$connections[$config->getId()])) {
+            return self::$connections[$config->getId()];
         }
 
         // check for PDO extension
@@ -63,15 +63,15 @@ class DbPool
 
         try {
             // conecta con pdo
-            self::$_connections[$config->getId()] = new PDO(
+            self::$connections[$config->getId()] = new PDO(
                             $config->getType() . ':host=' . $config->getHost() . ';dbname=' . $config->getDbName(),
                             $config->getUsername(),
                             $config->getPassword());
 
-            self::$_connections[$config->getId()]
+            self::$connections[$config->getId()]
                     ->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            return self::$_connections[$config->getId()];
+            return self::$connections[$config->getId()];
         } catch (\PDOException $e) {
             throw new \PDOException($e->getMessage());
         }
