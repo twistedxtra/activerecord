@@ -13,6 +13,7 @@ class Config
 {
 
     protected static $parameters = array();
+    protected static $defaultConectionName;
 
     public static function add(Parameters $param)
     {
@@ -34,6 +35,21 @@ class Config
     public static function get($id)
     {
         return self::has($id) ? self::$parameters[$id] : NULL;
+    }
+
+    public static function initialized()
+    {
+        return count(self::$parameters) > 0;
+    }
+
+    public static function setDefault($id)
+    {
+        self::$defaultConectionName = $id;
+    }
+
+    public static function getDefault()
+    {
+        return self::$defaultConectionName;
     }
 
 }
