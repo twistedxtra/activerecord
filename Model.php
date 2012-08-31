@@ -1,5 +1,4 @@
 <?php
-
 /**
  * KumbiaPHP web & app Framework
  *
@@ -23,11 +22,12 @@
 
 namespace ActiveRecord;
 
-use \Iterator;
-use ActiveRecord\Model\ActiveRecordException;
-use ActiveRecord\Adapter\Adapter;
-use ActiveRecord\Query\DbQuery;
 use \PDO;
+use \Iterator;
+use ActiveRecord\Query\DbQuery;
+use ActiveRecord\Adapter\Adapter;
+use ActiveRecord\Paginator\Paginator;
+use ActiveRecord\Model\ActiveRecordException;
 
 /**
  * ActiveRecord Clase para el Mapeo Objeto Relacional
@@ -67,56 +67,56 @@ class Model implements Iterator
      *
      * @var strings
      */
-    protected $_connection = NULL;
+    protected $connection = NULL;
 
     /**
      * Tabla origen de datos
      *
      * @var string
      */
-    protected $_table = NULL;
+    protected $table = NULL;
 
     /**
      * Esquema de datos
      *
      * @var string
      */
-    protected $_schema = NULL;
+    protected $schema = NULL;
 
     /**
      * Objeto DbQuery para implementar chain
      * 
      * @var Obj
      */
-    protected $_dbQuery = NULL;
+    protected $dbQuery = NULL;
 
     /**
      * Posicion en el iterador
      *
      * @var int
      */
-    private $_pointer = 0;
+    private $pointer = 0;
 
     /**
      * ResulSet PDOStatement
      * 
      * @var PDOStatement
      */
-    protected $_resultSet = NULL;
+    protected $resultSet = NULL;
 
     /**
      * Modo de obtener datos
      * 
      * @var integer
      */
-    protected $_fetchMode = self::FETCH_MODEL;
+    protected $fetchMode = self::FETCH_MODEL;
 
     /**
      * Instancias de metadata de modelos
      *
      * @var array
      */
-    private static $_metadata = array();
+    private static $metadata = array();
 
     /**
      * Constructor de la class
@@ -138,12 +138,12 @@ class Model implements Iterator
     {
         $model = get_class($this);
 
-        if (!isset(self::$_metadata[$model])) {
-            self::$_metadata[$model] = Adapter::factory($this->getConnection())
+        if (!isset(self::$metadata[$model])) {
+            self::$metadata[$model] = Adapter::factory($this->getConnection())
                     ->describe($this->getTable(), $this->getSchema());
         }
 
-        return self::$_metadata[$model];
+        return self::$metadata[$model];
     }
 
     /**
@@ -206,7 +206,7 @@ class Model implements Iterator
      */
     public function setFetchMode($mode)
     {
-        $this->_fetchMode = $mode;
+        $this->fetchMode = $mode;
         return $this;
     }
 
@@ -216,7 +216,7 @@ class Model implements Iterator
      */
     public function rewind()
     {
-        $this->_pointer = 0;
+        $this->pointer = 0;
     }
 
     /**
@@ -228,7 +228,7 @@ class Model implements Iterator
         if (!$this->valid()) {
             throw new ActiveRecordException('No se pude obtener la fila actual');
         }
-        return $this->_resultSet->fetch();
+        return $this->resultSet->fetch();
     }
 
     /**
@@ -237,7 +237,7 @@ class Model implements Iterator
      */
     public function key()
     {
-        return $this->_pointer;
+        return $this->pointer;
     }
 
     /**
@@ -246,7 +246,7 @@ class Model implements Iterator
      */
     public function next()
     {
-        ++$this->_pointer;
+        ++$this->pointer;
     }
 
     /**
@@ -255,7 +255,7 @@ class Model implements Iterator
      */
     public function valid()
     {
-        return $this->_pointer < $this->_resultSet->rowCount();
+        return $this->pointer < $this->resultSet->rowCount();
     }
 
     /**
@@ -266,24 +266,24 @@ class Model implements Iterator
     {
         // Si no se especifica toma el por defecto
         if (!$fetchMode) {
-            $fetchMode = $this->_fetchMode;
+            $fetchMode = $this->fetchMode;
         }
 
         switch ($fetchMode) {
             // Obtener instancias del mismo modelo
             case self::FETCH_MODEL:
                 // Instancias de un nuevo modelo, por lo tanto libre de los atributos de la instancia actual
-                $this->_resultSet->setFetchMode(PDO::FETCH_INTO, new self());
+                $this->resultSet->setFetchMode(PDO::FETCH_INTO, new self());
                 break;
 
             // Obtener instancias de objetos simples
             case self::FETCH_OBJ:
-                $this->_resultSet->setFetchMode(PDO::FETCH_OBJ);
+                $this->resultSet->setFetchMode(PDO::FETCH_OBJ);
                 break;
 
             // Obtener arrays
             case self::FETCH_ARRAY:
-                $this->_resultSet->setFetchMode(PDO::FETCH_ASSOC);
+                $this->resultSet->setFetchMode(PDO::FETCH_ASSOC);
                 break;
         }
     }
@@ -296,7 +296,7 @@ class Model implements Iterator
      */
     public function setTable($table)
     {
-        $this->_table = $table;
+        $this->table = $table;
         return $this;
     }
 
@@ -308,14 +308,14 @@ class Model implements Iterator
     public function getTable()
     {
         // Asigna la tabla
-        if (!$this->_table) {
-            $this->_table = strtolower(basename(get_class($this)));
-            $this->_table[0] = strtolower($this->_table[0]);
-            $this->_table = strtolower(preg_replace('/([A-Z])/', "_$1", $this->_table));
+        if (!$this->table) {
+            $this->table = strtolower(basename(get_class($this)));
+            $this->table[0] = strtolower($this->table[0]);
+            $this->table = strtolower(preg_replace('/([A-Z])/', "_$1", $this->table));
         }
 
         // Tabla
-        return $this->_table;
+        return $this->table;
     }
 
     /**
@@ -348,7 +348,7 @@ class Model implements Iterator
      */
     public function setConnection($conn)
     {
-        $this->_connection = $conn;
+        $this->connection = $conn;
         return $this;
     }
 
@@ -359,7 +359,7 @@ class Model implements Iterator
      */
     public function getConnection()
     {
-        return $this->_connection;
+        return $this->connection;
     }
 
     /**
@@ -374,18 +374,18 @@ class Model implements Iterator
     {
         try {
             // Obtiene una instancia del adaptador y prepara la consulta
-            $this->_resultSet = Adapter::factory($this->_connection)
+            $this->resultSet = Adapter::factory($this->connection)
                     ->prepare($sql);
 
             // Indica el modo de obtener los datos en el ResultSet
             $this->_fetchMode($fetchMode);
 
             // Ejecuta la consulta
-            $this->_resultSet->execute($params);
+            $this->resultSet->execute($params);
             return $this;
         } catch (PDOException $e) {
             // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
-            echo $this->_resultSet->errorCode();
+            echo $this->resultSet->errorCode();
         }
 
         return FALSE;
@@ -403,24 +403,24 @@ class Model implements Iterator
         $dbQuery->table($this->getTable());
 
         // Asigna el esquema si existe
-        if ($this->_schema) {
-            $dbQuery->schema($this->_schema);
+        if ($this->schema) {
+            $dbQuery->schema($this->schema);
         }
 
         try {
             // Obtiene una instancia del adaptador y prepara la consulta
-            $this->_resultSet = Adapter::factory($this->_connection)
+            $this->resultSet = Adapter::factory($this->connection)
                     ->prepareDbQuery($dbQuery);
 
             // Indica el modo de obtener los datos en el ResultSet
             $this->_fetchMode($fetchMode);
 
             // Ejecuta la consulta
-            $this->_resultSet->execute($dbQuery->getBind());
+            $this->resultSet->execute($dbQuery->getBind());
             return $this;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
-            echo $this->_resultSet->errorCode();
+            echo $this->resultSet->errorCode();
         }
     }
 
@@ -432,9 +432,9 @@ class Model implements Iterator
     public function get()
     {
         // Crea la instancia de DbQuery
-        $this->_dbQuery = new DbQuery();
+        $this->dbQuery = new DbQuery();
 
-        return $this->_dbQuery;
+        return $this->dbQuery;
     }
 
     /**
@@ -445,10 +445,10 @@ class Model implements Iterator
      */
     public function find($fetchMode = NULL)
     {
-        if (!$this->_dbQuery) {
+        if (!$this->dbQuery) {
             $this->get();
         }
-        return $this->query($this->_dbQuery->select(), $fetchMode);
+        return $this->query($this->dbQuery->select(), $fetchMode);
     }
 
     /**
@@ -459,7 +459,7 @@ class Model implements Iterator
      */
     public function all($fetchMode = NULL)
     {
-        return $this->find($fetchMode)->_resultSet->fetchAll();
+        return $this->find($fetchMode)->resultSet->fetchAll();
     }
 
     /**
@@ -470,13 +470,13 @@ class Model implements Iterator
      */
     public function first($fetchMode = NULL)
     {
-        if (!$this->_dbQuery) {
+        if (!$this->dbQuery) {
             $this->get();
         }
 
         // Realiza la busqueda y retorna el objeto ActiveRecord
-        return $this->query($this->_dbQuery->select()->limit(1)
-                                ->offset(0), $fetchMode)->_resultSet->fetch();
+        return $this->query($this->dbQuery->select()->limit(1)
+                                ->offset(0), $fetchMode)->resultSet->fetch();
     }
 
     /**
@@ -577,7 +577,7 @@ class Model implements Iterator
             // Convenio patron identidad en activerecord si PK es "id"
             if ($this->metadata()->getPK() === 'id' && (!isset($this->id) || $this->id == '')) {
                 // Obtiene el ultimo id insertado y lo carga en el objeto
-                $this->id = Adapter::factory($this->_connection)
+                $this->id = Adapter::factory($this->connection)
                                 ->pdo()->lastInsertId();
             }
 
@@ -598,12 +598,12 @@ class Model implements Iterator
      */
     public function updateAll($data)
     {
-        if (!$this->_dbQuery) {
+        if (!$this->dbQuery) {
             $this->get();
         }
 
         // Ejecuta la consulta
-        return $this->query($this->_dbQuery->update($data));
+        return $this->query($this->dbQuery->update($data));
     }
 
     /**
@@ -613,12 +613,12 @@ class Model implements Iterator
      */
     public function deleteAll()
     {
-        if (!$this->_dbQuery) {
+        if (!$this->dbQuery) {
             $this->get();
         }
 
         // Ejecuta la consulta
-        return $this->query($this->_dbQuery->delete());
+        return $this->query($this->dbQuery->delete());
     }
 
     /**
@@ -639,11 +639,11 @@ class Model implements Iterator
      */
     public function count($column = '*')
     {
-        if (!$this->_dbQuery) {
+        if (!$this->dbQuery) {
             $this->get();
         }
 
-        $this->_dbQuery->columns("COUNT($column) AS n");
+        $this->dbQuery->columns("COUNT($column) AS n");
         return $this->first(self::FETCH_OBJ)->n;
     }
 
@@ -786,6 +786,42 @@ class Model implements Iterator
         }
 
         return FALSE;
+    }
+
+    public function paginate($page, $per_page = 10, $fetchMode = NULL)
+    {
+        $this->setFetchMode($fetchMode);
+
+        $this->dbQuery || $this->get();
+
+        return Paginator::paginate($this, $this->dbQuery, $page, $per_page);
+    }
+
+    /**
+     * Inicia una transacci&oacute;n si es posible
+     *
+     */
+    public function begin()
+    {
+        return DbAdapter::factory($this->_connection)->pdo()->beginTransaction();
+    }
+
+    /**
+     * Cancela una transacci&oacute;n si es posible
+     *
+     */
+    public function rollback()
+    {
+        return DbAdapter::factory($this->_connection)->pdo()->rollBack();
+    }
+
+    /**
+     * Hace commit sobre una transacci&oacute;n si es posible
+     *
+     */
+    public function commit()
+    {
+        return DbAdapter::factory($this->_connection)->pdo()->commit();
     }
 
 }
