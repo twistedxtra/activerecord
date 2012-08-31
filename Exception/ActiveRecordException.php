@@ -1,6 +1,6 @@
 <?php
 
-namespace ActiveRecord\Model;
+namespace ActiveRecord\Exception;
 
 use \Exception;
 
