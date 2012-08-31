@@ -457,7 +457,7 @@ class Model implements Iterator
      * @param string $fetchMode
      * @return array
      */
-    public function all($fetchMode = NULL)
+    public function findAll($fetchMode = NULL)
     {
         return $this->find($fetchMode)->resultSet->fetchAll();
     }
