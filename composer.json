@@ -1,10 +1,4 @@
 {
     "name": "kumbiaphp/activerecord",
-    "target-dir": "ActiveRecord",
-    "minimum-stability": "dev",
-    "extra":{
-        "branch-alias":{
-            "master":"php5.3"            
-        }
-    }
+    "target-dir": "ActiveRecord"
 }
