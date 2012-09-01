@@ -3,7 +3,7 @@
     "target-dir": "ActiveRecord",
     "extra":{
         "branch-alias":{
-            "php5.3":"1.0.0"            
+            "master":"1.0.0"            
         }
     }
 }
