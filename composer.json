@@ -1,4 +1,3 @@
 {
-    "name": "kumbiaphp/activerecord",
-    "target-dir": "ActiveRecord"
+    "name": "kumbiaphp/activerecord"
 }
