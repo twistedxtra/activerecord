@@ -1,5 +1,7 @@
 {
     "name": "kumbiaphp/activerecord",
     "type": "library",
-    "target-dir": "ActiveRecord"
+    "autoload":{
+        "psr-0":{"ActiveRecord" : "lib/"}
+    }
 }
