@@ -10,7 +10,7 @@ Actualmente no tiene su propio autoloader, por lo que para usarlo se debe regist
 Configuración:
 --------------
 
-Configuración de la conexión a la base de datos:
+    #. Configuración de la conexión a la base de datos:
 
 ::
 
@@ -29,3 +29,16 @@ Configuración de la conexión a la base de datos:
     )));
 
 Con estos sencillos pasos ya tenemos configurada nuestra conexión a la base de datos.
+
+    #. Creando un Modelo:
+
+::
+
+    <?php
+
+    use ActiveRecord\Model;
+
+    class Usuarios extends Model{}
+
+    //ahora nuestra clase usuario posee todos los métodos basicos para el acceso y comunicación con nuestra base de datos.
+
