@@ -1,5 +1,4 @@
 <?php
-
 /**
  * KumbiaPHP web & app Framework
  *
@@ -164,7 +163,7 @@ class Model implements Iterator
      * 
      * @return boolean
      */
-    protected function _beforeCreate()
+    protected function beforeCreate()
     {
         
     }
@@ -174,7 +173,7 @@ class Model implements Iterator
      * 
      * @return boolean
      */
-    protected function _afterCreate()
+    protected function afterCreate()
     {
         
     }
@@ -184,7 +183,17 @@ class Model implements Iterator
      * 
      * @return boolean
      */
-    protected function _beforeUpdate()
+    protected function beforeUpdate()
+    {
+        
+    }
+
+    /**
+     * Callback para realizar validaciones
+     * 
+     * @return boolean
+     */
+    protected function validate($update = FALSE)
     {
         
     }
@@ -194,7 +203,7 @@ class Model implements Iterator
      * 
      * @return boolean
      */
-    protected function _afterUpdate()
+    protected function afterUpdate()
     {
         
     }
@@ -263,7 +272,7 @@ class Model implements Iterator
      * Indica el modo de obtener datos al ResultSet actual
      * 
      */
-    protected function _fetchMode($fetchMode = NULL)
+    protected function fetchMode($fetchMode = NULL)
     {
         // Si no se especifica toma el por defecto
         if (!$fetchMode) {
@@ -379,7 +388,7 @@ class Model implements Iterator
                     ->prepare($sql);
 
             // Indica el modo de obtener los datos en el ResultSet
-            $this->_fetchMode($fetchMode);
+            $this->fetchMode($fetchMode);
 
             // Ejecuta la consulta
             $this->resultSet->execute($params);
@@ -409,16 +418,16 @@ class Model implements Iterator
         }
 
 //        try {
-            // Obtiene una instancia del adaptador y prepara la consulta
-            $this->resultSet = Adapter::factory($this->connection)
-                    ->prepareDbQuery($dbQuery);
+        // Obtiene una instancia del adaptador y prepara la consulta
+        $this->resultSet = Adapter::factory($this->connection)
+                ->prepareDbQuery($dbQuery);
 
-            // Indica el modo de obtener los datos en el ResultSet
-            $this->_fetchMode($fetchMode);
+        // Indica el modo de obtener los datos en el ResultSet
+        $this->fetchMode($fetchMode);
 
-            // Ejecuta la consulta
-            $this->resultSet->execute($dbQuery->getBind());
-            return $this;
+        // Ejecuta la consulta
+        $this->resultSet->execute($dbQuery->getBind());
+        return $this;
 //        } catch (\PDOException $e) {
 //            // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
 //        }
@@ -531,7 +540,7 @@ class Model implements Iterator
      * 
      * @return array
      */
-    private function _getTableValues()
+    private function getTableValues()
     {
         $data = array();
 
@@ -565,12 +574,14 @@ class Model implements Iterator
             $this->dump($data);
         }
 
-//        // Ejecuta la validacion
-//        if (ActiveRecordValidator::validateOnCreate($this) === FALSE) {
-//            return FALSE;
-//        }
+
+        // Callback de validaciónes
+        if ($this->validate(FALSE) === FALSE) {
+            return FALSE;
+        }
+
         // Callback antes de crear
-        if ($this->_beforeCreate() === FALSE) {
+        if ($this->beforeCreate() === FALSE) {
             return FALSE;
         }
 
@@ -578,7 +589,7 @@ class Model implements Iterator
         $dbQuery = new DbQuery();
 
         // Ejecuta la consulta
-        if ($this->query($dbQuery->insert($this->_getTableValues()))) {
+        if ($this->query($dbQuery->insert($this->getTableValues()))) {
 
             // Convenio patron identidad en activerecord si PK es "id"
             if ($this->metadata()->getPK() === 'id' && (!isset($this->id) || $this->id == '')) {
@@ -589,7 +600,7 @@ class Model implements Iterator
 
 
             // Callback despues de crear
-            $this->_afterCreate();
+            $this->afterCreate();
             return $this;
         }
 
@@ -623,16 +634,6 @@ class Model implements Iterator
     }
 
     /**
-     * Validadores
-     * 
-     * @return array
-     */
-    public function validators()
-    {
-        
-    }
-
-    /**
      * Cuenta las apariciones de filas
      * 
      * @param string $column
@@ -661,7 +662,7 @@ class Model implements Iterator
      * 
      * @param DbQuery $dbQuery
      */
-    protected function _wherePK($dbQuery)
+    protected function wherePK($dbQuery)
     {
         // Obtiene la clave primaria
         $pk = $this->metadata()->getPK();
@@ -695,7 +696,7 @@ class Model implements Iterator
         $dbQuery = $this->get();
 
         // Establece condicion de busqueda con clave primaria
-        $this->_wherePK($dbQuery);
+        $this->wherePK($dbQuery);
 
         return $this->existsOne();
     }
@@ -713,12 +714,13 @@ class Model implements Iterator
             $this->dump($data);
         }
 
-//        // Ejecuta la validacion
-//        if (ActiveRecordValidator::validateOnUpdate($this) === FALSE) {
-//            return FALSE;
-//        }
+        // Callback de validaciónes
+        if ($this->validate(TRUE) === FALSE) {
+            return FALSE;
+        }
+
         // Callback antes de actualizar
-        if ($this->_beforeUpdate() === FALSE) {
+        if ($this->beforeUpdate() === FALSE) {
             return FALSE;
         }
 
@@ -730,12 +732,12 @@ class Model implements Iterator
         // Objeto de consulta
         $dbQuery = new DbQuery();
         // Establece condicion de busqueda con clave primaria
-        $this->_wherePK($dbQuery);
+        $this->wherePK($dbQuery);
 
         // Ejecuta la consulta con el query utilizado para el exists
-        if ($this->query($dbQuery->update($this->_getTableValues()))) {
+        if ($this->query($dbQuery->update($this->getTableValues()))) {
             // Callback despues de actualizar
-            $this->_afterUpdate();
+            $this->afterUpdate();
             return $this;
         }
 
@@ -752,7 +754,7 @@ class Model implements Iterator
         // Objeto de consulta
         $dbQuery = new DbQuery();
         // Establece condicion de busqueda con clave primaria
-        $this->_wherePK($dbQuery);
+        $this->wherePK($dbQuery);
 
         // Ejecuta la consulta con el query utilizado para el exists
         if ($this->query($dbQuery->delete())) {
