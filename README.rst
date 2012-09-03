@@ -10,7 +10,7 @@ Actualmente no tiene su propio autoloader, por lo que para usarlo se debe regist
 Configuración:
 --------------
 
-    #. Configuración de la conexión a la base de datos:
+    * Configuración de la conexión a la base de datos:
 
 ::
 
@@ -30,7 +30,7 @@ Configuración:
 
 Con estos sencillos pasos ya tenemos configurada nuestra conexión a la base de datos.
 
-    #. Creando un Modelo:
+    * Creando un Modelo:
 
 ::
 
