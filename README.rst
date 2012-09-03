@@ -40,5 +40,30 @@ Con estos sencillos pasos ya tenemos configurada nuestra conexión a la base de 
 
     class Usuarios extends Model{}
 
-    //ahora nuestra clase usuario posee todos los métodos basicos para el acceso y comunicación con nuestra base de datos.
+ahora nuestra clase usuario posee todos los métodos basicos para el acceso y comunicación con nuestra base de datos.
+
+Consultando registros:
+----------------------
+
+La lib ofrece una serie de métodos para la realización de consultas a nuestra base de datos, veamos algunos ejemplos:
+
+::
+    
+    <?php
+
+    $user = new Usuarios();
+
+    $result = $user->findAll(); //nos devuelve todos los registros de la tabla en la base de datos.
+
+    foreach($result as $e){
+        echo $e->nombres; //cada elemento iterado en el foreach es un objeto Usuarios
+    }
+
+    //obteniendo el resultados como una matriz
+
+    $result = $user->findAll("array"); //nos devuelve todos los registros de la tabla en la base de datos como un arreglo. 
+
+    foreach($result as $e){
+        echo $e["nombres"]; //cada elemento iterado en el foreach es un arreglo
+    }
 
