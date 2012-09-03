@@ -82,10 +82,16 @@ La lib ofrece una serie de métodos para la realización de consultas a nuestra 
         echo $e["nombres"]; //cada elemento iterado en el foreach es un arreglo
     }
 
-    //filtrando consultas:
+Filtrando Consultas:
+--------------------
 
-    //para filtrar consultas el active record nos ofrece una clase DbQuery que nos permitirá construir consultas SQL de manera
-    //orientada a Objetos.
+Para filtrar consultas el active record nos ofrece una clase DbQuery que nos permitirá construir consultas SQL de manera orientada a Objetos.
+
+::
+
+    <?php
+
+    $user = new Usuarios();
 
     //el metodo get() crea y nos devuelve una instancia de DbQuery
 
