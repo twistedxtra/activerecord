@@ -1,7 +1,7 @@
 ActiveRecord 2
 ==============
 
-Nuevo Active Record para la nueva versión de KumbiaPHP que trabaja con php 5.3 ó superior.
+Nuevo Active Record para la nueva versión de KumbiaPHP que trabaja con php 5.3 ó superior, trabaja con PDO.
 
 Aunque es una librería realizada con la finalidad de ofrecer una capa de abstraccion a base de datos para el framework KumbiaPHP, esta nueva versión puede ser usada en cualquier proyecto php.
 
@@ -21,7 +21,7 @@ Configuración:
 
     Config::add(new Parameters("default",array(
             'username' => 'root',
-            'password' => 'contrseña',
+            'password' => 'contraseña',
             'host' => 'localhost', //por defecto localhost
             'type' => 'mysql',
             'port' => '3306', //si no se especifica se usa el puerto por defecto del gestor de base de datos usado.
@@ -40,7 +40,20 @@ Con estos sencillos pasos ya tenemos configurada nuestra conexión a la base de 
 
     class Usuarios extends Model{}
 
-ahora nuestra clase usuario posee todos los métodos basicos para el acceso y comunicación con nuestra base de datos.
+Ahora nuestra clase usuario posee todos los métodos basicos para el acceso y comunicación con nuestra base de datos.
+por defecto el nombre de la tabla es el nombre del módelo en notación small_case, sin embargo para casos donde no se
+pueda cumpliar la conversión, podemos especificar el nombre de la tabla como un atributo de la clase, ejemplo:
+
+::
+
+   <?php
+
+    use ActiveRecord\Model;
+
+    class Usuarios extends Model{
+         protected $table = 'users'; //nuestra tabla en la base de datos se llama user
+    }
+
 
 Consultando registros:
 ----------------------
@@ -52,6 +65,8 @@ La lib ofrece una serie de métodos para la realización de consultas a nuestra 
     <?php
 
     $user = new Usuarios();
+
+    //consultando todos los registros en la tabla.
 
     $result = $user->findAll(); //nos devuelve todos los registros de la tabla en la base de datos.
 
@@ -67,3 +82,24 @@ La lib ofrece una serie de métodos para la realización de consultas a nuestra 
         echo $e["nombres"]; //cada elemento iterado en el foreach es un arreglo
     }
 
+    //filtrando consultas:
+
+    //para filtrar consultas el active record nos ofrece una clase DbQuery que nos permitirá construir consultas SQL de manera
+    //orientada a Objetos.
+
+    //el metodo get() crea y nos devuelve una instancia de DbQuery
+
+    $user->get()->where("nombres = :nom")->bindValue("nom", "Manuel José");
+
+    //ya que el active record trabaja con PDO, y este permite crear consultas preparadas, es decir, los valores 
+    //de variables no se colocan directamente en la cadena de consulta, sino que se pasan a traves de métodos
+    //de la clase PDO, que se encargan de filtrar y sanitizar los valores de la consulta, el DbQuery permite establecer
+    //estos valores directamente en su clase a traves de los métodos bindValue($param,$value) y bind($params).
+
+    $result = $user->findAll(); //aunque llamemos al mismo metodo findAll, esté va a filtrar los datos por medio de
+                                //las especificaciones indicadas en la instancia del DbQuery.
+
+    //mostramos los registros que nos devolvió la consulta:
+    foreach($result as $e){
+        echo $e->nombres; //cada elemento iterado en el foreach es un objeto Usuarios
+    }
