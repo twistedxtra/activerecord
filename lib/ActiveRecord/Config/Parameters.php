@@ -18,7 +18,7 @@ class Parameters
     protected $host = 'localhost';
     protected $type;
 
-    function __construct($id, $config)
+    function __construct($id, array $config = array())
     {
         $this->id = $id;
         isset($config['username']) && $this->username = $config['username'];
