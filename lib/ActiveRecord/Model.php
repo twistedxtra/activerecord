@@ -27,6 +27,7 @@ use \PDO;
 use \Iterator;
 use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Adapter\Adapter;
+use ActiveRecord\Metadata\Metadata;
 use ActiveRecord\Paginator\Paginator;
 use ActiveRecord\Exception\ActiveRecordException;
 
@@ -337,7 +338,7 @@ class Model implements Iterator
      */
     public function setSchema($schema)
     {
-        $this->_schema = $schema;
+        $this->schema = $schema;
         return $this;
     }
 
@@ -348,7 +349,7 @@ class Model implements Iterator
      */
     public function getSchema()
     {
-        return $this->_schema;
+        return $this->schema;
     }
 
     /**
