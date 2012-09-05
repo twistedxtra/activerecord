@@ -8,7 +8,7 @@ Para configurar una ó varias conexiones a Base de Datos debemos hacer uso de do
 La clase Parameters
 -------------------
 
-Esta clase será la que contenga los valores de configuración a una base de datos en especifico, dichos valores pueden ser establicidos en el constructor de la clase al instanciarla, ó con el uso de métodos setters, veamos un ejemplo:
+Esta clase será la que contenga los valores de configuración de una base de datos en especifico, dichos valores pueden ser establicidos en el constructor de la clase al instanciarla, ó con el uso de métodos setters, veamos un ejemplo:
 
 ::
 
@@ -28,4 +28,15 @@ Esta clase será la que contenga los valores de configuración a una base de dat
 
   //ahora configuraremos otra conexión, pero a traves de los métodos setters de la clase:
 
-  
+  $mysql = new Parameters("config_postgres"); //no pasamos el arreglo con la configuración.
+
+  $mysql->setUsername("administrador")
+        ->setPassword("admin123Admin")
+        ->setHost("192.168.1.3")
+        ->setPort("2020")
+        ->setDbName("clinicas")
+        ->setType("pgsql");
+
+Como se puede ver, esas son las dos formas de crear la configuración de acceso a una base de datos.
+
+NOTA: en el constructor el indice para el nombre de la base de datos debe ser "name" aunque realmente dicho valor se almacena en la propiedad $dbName de la clase Parameters, por eso el método para establecer el nombre de la base de datos es "setDbName()".
