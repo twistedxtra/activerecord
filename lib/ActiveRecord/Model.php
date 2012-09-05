@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -100,7 +101,7 @@ class Model implements Iterator
     /**
      * ResulSet PDOStatement
      * 
-     * @var PDOStatement
+     * @var \PDOStatement
      */
     protected $resultSet = NULL;
 
@@ -283,7 +284,7 @@ class Model implements Iterator
             // Obtener instancias del mismo modelo
             case self::FETCH_MODEL:
                 // Instancias de un nuevo modelo, por lo tanto libre de los atributos de la instancia actual
-                $this->resultSet->setFetchMode(PDO::FETCH_INTO, new self());
+                $this->resultSet->setFetchMode(PDO::FETCH_INTO, new static());
                 break;
 
             // Obtener instancias de objetos simples
@@ -466,7 +467,7 @@ class Model implements Iterator
      */
     public function findAll($fetchMode = NULL)
     {
-        return $this->find($fetchMode)->resultSet->fetchAll();
+        return $this->find($fetchMode);
     }
 
     /**
