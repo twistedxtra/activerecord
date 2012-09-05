@@ -59,7 +59,7 @@ class Mysql extends Adapter
 
                     //puede ser null?
                     if ($field->Null == 'NO') {
-                        $attribute->notNull = FALSE;
+                        $attribute->notNull = TRUE;
                     }
 
                     //tipo de dato y longitud

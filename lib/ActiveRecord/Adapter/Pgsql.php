@@ -82,7 +82,7 @@ class Pgsql extends Adapter
                     }
                     //puede ser null?
                     if ($field->null == 'NO') {
-                        $attribute->notNull = FALSE;
+                        $attribute->notNull = TRUE;
                     }
                     //Relaciones
                     if (substr($field->name, strlen($field->name) - 3, 3) == '_id') {
