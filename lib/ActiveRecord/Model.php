@@ -1,5 +1,4 @@
 <?php
-
 /**
  * KumbiaPHP web & app Framework
  *
@@ -547,16 +546,20 @@ class Model implements Iterator
         $data = array();
 
         // Itera en cada atributo
-        foreach ($this->metadata()->getAttributesList() as $attr) {
+        foreach ($this->metadata()->getAttributes() as $fieldName => $attr) {
 
-            if (property_exists($this, $attr)) {
-                if ($this->$attr === '') {
-                    $data[$attr] = NULL;
+            if (property_exists($this, $fieldName)) {
+                if ($this->$fieldName === '') {
+                    if (!$attr->default) {
+                        $data[$fieldName] = NULL;
+                    }
                 } else {
-                    $data[$attr] = $this->$attr;
+                    $data[$fieldName] = $this->$fieldName;
                 }
             } else {
-                $data[$attr] = NULL;
+                if (!$attr->default) {
+                    $data[$fieldName] = NULL;
+                }
             }
         }
 
@@ -575,7 +578,6 @@ class Model implements Iterator
         if (is_array($data)) {
             $this->dump($data);
         }
-
 
         // Callback de validaciónes
         if ($this->validate(FALSE) === FALSE) {
@@ -599,7 +601,6 @@ class Model implements Iterator
                 $this->id = Adapter::factory($this->connection)
                                 ->pdo()->lastInsertId();
             }
-
 
             // Callback despues de crear
             $this->afterCreate();
@@ -798,6 +799,19 @@ class Model implements Iterator
         $this->dbQuery || $this->get();
 
         return Paginator::paginate($this, $this->dbQuery, $page, $per_page);
+    }
+
+    public function save(array $data = array())
+    {
+        if (count($data)) {
+            $this->dump($data);
+        }
+        
+        if ( isset( $this->{$this->metadata()->getPK()}) && $this->exists() ){
+            return $this->update();
+        }else{
+            return $this->create();            
+        }
     }
 
     /**
