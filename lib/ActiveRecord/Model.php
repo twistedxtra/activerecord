@@ -281,10 +281,9 @@ class Model implements Iterator
         }
 
         switch ($fetchMode) {
-            // Obtener instancias del mismo modelo
-            case self::FETCH_MODEL:
-                // Instancias de un nuevo modelo, por lo tanto libre de los atributos de la instancia actual
-                $this->resultSet->setFetchMode(PDO::FETCH_INTO, new static());
+            // Obtener arrays
+            case self::FETCH_ARRAY:
+                $this->resultSet->setFetchMode(PDO::FETCH_ASSOC);
                 break;
 
             // Obtener instancias de objetos simples
@@ -292,10 +291,11 @@ class Model implements Iterator
                 $this->resultSet->setFetchMode(PDO::FETCH_OBJ);
                 break;
 
-            // Obtener arrays
-            case self::FETCH_ARRAY:
-                $this->resultSet->setFetchMode(PDO::FETCH_ASSOC);
-                break;
+            // Obtener instancias del mismo modelo
+            case self::FETCH_MODEL:
+            default:
+                // Instancias de un nuevo modelo, por lo tanto libre de los atributos de la instancia actual
+                $this->resultSet->setFetchMode(PDO::FETCH_INTO, new static());
         }
     }
 
@@ -806,11 +806,11 @@ class Model implements Iterator
         if (count($data)) {
             $this->dump($data);
         }
-        
-        if ( isset( $this->{$this->metadata()->getPK()}) && $this->exists() ){
+
+        if (isset($this->{$this->metadata()->getPK()}) && $this->exists()) {
             return $this->update();
-        }else{
-            return $this->create();            
+        } else {
+            return $this->create();
         }
     }
 
