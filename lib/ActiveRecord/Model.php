@@ -528,7 +528,7 @@ class Model implements Iterator
      * 
      * @param string $value
      * @param string $fetchMode
-     * @return ActiveRecord
+     * @return Model
      */
     public function findByPK($value, $fetchMode = NULL)
     {
