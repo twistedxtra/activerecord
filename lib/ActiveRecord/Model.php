@@ -24,6 +24,7 @@ namespace ActiveRecord;
 
 use \PDO;
 use \Iterator;
+use \Countable;
 use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Adapter\Adapter;
 use ActiveRecord\Metadata\Metadata;
@@ -42,7 +43,7 @@ use ActiveRecord\Exception\ActiveRecordException;
  * la tabla de la base de datos. Cuando se modifican los atributos del
  * objeto, se actualiza la fila de la base de datos.
  */
-class Model implements Iterator
+class Model implements Iterator, Countable
 {
     /**
      * Obtener datos cargados en objeto del Modelo
@@ -96,7 +97,7 @@ class Model implements Iterator
      *
      * @var int
      */
-    private $pointer = 0;
+    private $pointer = NULl;
 
     /**
      * ResulSet PDOStatement
@@ -642,12 +643,16 @@ class Model implements Iterator
      * @param string $column
      * @return integer
      */
-    public function count($column = '*')
+    public function count()
     {
         $this->dbQuery || $this->get();
+        
+        if ( NULL !== $this->pointer ){
+            return $this->pointer;
+        }
 
-        $this->dbQuery->columns("COUNT($column) AS n");
-        return $this->first(self::FETCH_OBJ)->n;
+        $this->dbQuery->columns("COUNT(*) AS n");
+        return $this->pointer = $this->first(self::FETCH_OBJ)->n;
     }
 
     /**
