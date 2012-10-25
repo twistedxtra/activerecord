@@ -11,7 +11,7 @@ class Usuarios extends Model
 
 $user = new Usuarios();
 
-$user->get()->select('nombres,login')
+$user->createQuery()->select('nombres,login')
         ->where('login like :valor OR nombres <> :nom')
         ->bindValue('valor', 'manuelj555')
         ->bindValue('nom', 'manuelj555');

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -76,7 +77,7 @@ class Model implements Iterator, Countable
      *
      * @var string
      */
-    protected $table = NULL;
+    protected static $table = NULL;
 
     /**
      * Esquema de datos
@@ -121,14 +122,21 @@ class Model implements Iterator, Countable
     private static $metadata = array();
 
     /**
+     *
+     * @var array 
+     */
+    protected static $relations = array();
+
+    /**
      * Constructor de la class
      * 
      */
-    public function __construct($data = NULL)
+    public final function __construct($data = NULL)
     {
         if (is_array($data)) {
             $this->dump($data);
         }
+        $this->initialize();
     }
 
     /**
@@ -158,6 +166,11 @@ class Model implements Iterator, Countable
         foreach ($data as $k => $v) {
             $this->$k = $v;
         }
+    }
+
+    protected function initialize()
+    {
+        
     }
 
     /**
@@ -308,7 +321,7 @@ class Model implements Iterator, Countable
      */
     public function setTable($table)
     {
-        $this->table = $table;
+        static::$table = $table;
         return $this;
     }
 
@@ -320,14 +333,14 @@ class Model implements Iterator, Countable
     public function getTable()
     {
         // Asigna la tabla
-        if (!$this->table) {
-            $this->table = strtolower(basename(get_class($this)));
-            $this->table[0] = strtolower($this->table[0]);
-            $this->table = strtolower(preg_replace('/([A-Z])/', "_$1", $this->table));
+        if (!static::$table) {
+            static::$table = strtolower(basename(get_class($this)));
+            static::$table[0] = strtolower(static::$table[0]);
+            static::$table = strtolower(preg_replace('/([A-Z])/', "_$1", static::$table));
         }
 
         // Tabla
-        return $this->table;
+        return static::$table;
     }
 
     /**
@@ -440,7 +453,7 @@ class Model implements Iterator, Countable
      * 
      * @return DbQuery
      */
-    public function get()
+    public function createQuery()
     {
         // Crea la instancia de DbQuery
         $this->dbQuery = new DbQuery();
@@ -456,7 +469,7 @@ class Model implements Iterator, Countable
      */
     public function find($fetchMode = NULL)
     {
-        $this->dbQuery || $this->get();
+        $this->dbQuery || $this->createQuery();
         return $this->query($this->dbQuery->select(), $fetchMode);
     }
 
@@ -479,7 +492,7 @@ class Model implements Iterator, Countable
      */
     public function first($fetchMode = NULL)
     {
-        $this->dbQuery || $this->get();
+        $this->dbQuery || $this->createQuery();
 
         // Realiza la busqueda y retorna el objeto ActiveRecord
         return $this->query($this->dbQuery->select()->limit(1)
@@ -496,7 +509,7 @@ class Model implements Iterator, Countable
      */
     public function findBy($column, $value, $fetchMode = NULL)
     {
-        $this->get()->where("$column = :value")->bindValue('value', $value);
+        $this->createQuery()->where("$column = :value")->bindValue('value', $value);
         return $this->first($fetchMode);
     }
 
@@ -511,7 +524,7 @@ class Model implements Iterator, Countable
     public function findAllBy($column, $value, $fetchMode = NULL)
     {
         if (is_array($value)) {
-            $query = $this->get();
+            $query = $this->createQuery();
             $in = array();
             foreach ($value as $k => $v) {
                 $in[] = ":in_$k";
@@ -519,7 +532,7 @@ class Model implements Iterator, Countable
             }
             $query->where("$column IN (" . join(',', $in) . ")");
         } else {
-            $this->get()->where("$column = :value")->bindValue('value', $value);
+            $this->createQuery()->where("$column = :value")->bindValue('value', $value);
         }
         return $this->find($fetchMode)->resultSet->fetchAll();
     }
@@ -619,7 +632,7 @@ class Model implements Iterator, Countable
      */
     public function updateAll($data)
     {
-        $this->dbQuery || $this->get();
+        $this->dbQuery || $this->createQuery();
 
         // Ejecuta la consulta
         return $this->query($this->dbQuery->update($data));
@@ -632,7 +645,7 @@ class Model implements Iterator, Countable
      */
     public function deleteAll()
     {
-        $this->dbQuery || $this->get();
+        $this->dbQuery || $this->createQuery();
         // Ejecuta la consulta
         return $this->query($this->dbQuery->delete());
     }
@@ -645,9 +658,9 @@ class Model implements Iterator, Countable
      */
     public function count()
     {
-        $this->dbQuery || $this->get();
-        
-        if ( NULL !== $this->pointer ){
+        $this->dbQuery || $this->createQuery();
+
+        if (NULL !== $this->pointer) {
             return $this->pointer;
         }
 
@@ -701,7 +714,7 @@ class Model implements Iterator, Countable
     public function exists()
     {
         // Objeto de consulta
-        $dbQuery = $this->get();
+        $dbQuery = $this->createQuery();
 
         // Establece condicion de busqueda con clave primaria
         $this->wherePK($dbQuery);
@@ -801,7 +814,7 @@ class Model implements Iterator, Countable
     {
         $this->setFetchMode($fetchMode);
 
-        $this->dbQuery || $this->get();
+        $this->dbQuery || $this->createQuery();
 
         return Paginator::paginate($this, $this->dbQuery, $page, $per_page);
     }
@@ -844,6 +857,135 @@ class Model implements Iterator, Countable
     public function commit()
     {
         return DbAdapter::factory($this->_connection)->pdo()->commit();
+    }
+
+    /**
+     * Crea una relacion 1-1 inversa entre dos modelos
+     *
+     * @param string $relation
+     *
+     * model : nombre del modelo al que se refiere
+     * fk : campo por el cual se relaciona (llave foranea)
+     */
+    protected function belongsTo($model, $fk = NULL)
+    {
+        $fk || $fk = $this->getTable() . "_id";
+        static::$relations[get_class($this)]['belongsTo'][$model] = $fk;
+    }
+
+    /**
+     * Crea una relacion 1-1 entre dos modelos
+     *
+     * @param string $relation
+     *
+     * model : nombre del modelo al que se refiere
+     * fk : campo por el cual se relaciona (llave foranea)
+     */
+    protected function hasOne($model, $fk = NULL)
+    {
+        $fk || $fk = $this->getTable() . "_id";
+        static::$relations[get_class($this)]['hasOne'][$model] = $fk;
+    }
+
+    /**
+     * Crea una relacion 1-n entre dos modelos
+     *
+     * @param string $relation
+     *
+     * model : nombre del modelo al que se refiere
+     * fk : campo por el cual se relaciona (llave foranea)
+     */
+    protected function hasMany($model, $fk = NULL)
+    {
+        $fk || $fk = $this->getTable() . "_id";
+        static::$relations[get_class($this)]['hasMany'][$model] = $fk;
+    }
+
+    /**
+     * Crea una relacion n-n o 1-n inversa entre dos modelos
+     *
+     * @param string $relation
+     *
+     * model : nombre del modelo al que se refiere
+     * fk : campo por el cual se relaciona (llave foranea)
+     * key: campo llave que identifica al propio modelo
+     * through : atrav�s de que tabla
+     */
+    protected function hasAndBelongsToMany($model, $through, $fk, $key)
+    {
+        static::$relations[get_class($this)]['hasAndBelongsToMany']
+                [$model] = compact('through', 'fk', 'key');
+    }
+
+    /**
+     * Devuelve los registros del modelo al que se está asociado.
+     *
+     * @param string $mmodel nombre del modelo asociado
+     * @return array|NULL|FALSE si existen datos devolverá un array,
+     * NULL si no hay datos asociados aun, y false si no existe ninguna asociación.
+     */
+    public function get($model)
+    {
+        if (!isset(static::$relations[get_class($this)])) {
+            return FALSE;
+        }
+
+        if (isset(static::$relations[get_class($this)]['belongsTo']) &&
+                isset(static::$relations[get_class($this)]['belongsTo'][$model])) {
+
+            $fk = static::$relations[get_class($this)]['belongsTo'][$model];                        
+            $model = new $model();
+            
+            return $model->findBy($fk, $this->{$this->metadata()->getPK()});
+        }
+
+        if (isset(static::$relations[get_class($this)]['hasOne']) &&
+                isset(static::$relations[get_class($this)]['hasOne'][$model])) {
+
+            $fk = static::$relations[get_class($this)]['hasOne'][$model];
+            $model = new $model();
+
+            return $model->findBy($model->metadata()->getPK(), $this->{$fk});
+        }
+
+        if (isset(static::$relations[get_class($this)]['hasMany']) &&
+                isset(static::$relations[get_class($this)]['hasMany'][$model])) {
+
+            $fk = static::$relations[get_class($this)]['hasMany'][$model];
+            $model = new $model();
+
+            return $model->findAllBy($fk, $this->{$this->metadata()->getPK()});
+        }
+
+//        if (array_key_exists($mmodel, $this->_has_and_belongs_to_many)) {
+//            $relation = $this->_has_and_belongs_to_many[$mmodel];
+//            $relation_model = self::get($relation->model);
+//            $source = ($this->schema ? "{$this->schema}." : NULL ) . $this->source;
+//            $relation_source = ($relation_model->schema ? "{$relation_model->schema}." : NULL ) . $relation_model->source;
+//            /**
+//             * Cargo atraves de que tabla se efectuara la relacion
+//             *
+//             */
+//            if (!isset($relation->through)) {
+//                if ($source > $relation_source) {
+//                    $relation->through = "{$this->source}_{$relation_source}";
+//                } else {
+//                    $relation->through = "{$relation_source}_{$this->source}";
+//                }
+//            } else {
+//                $through = explode('/', $relation->through);
+//                $relation->through = end($through);
+//            }
+//            if ($this->{$this->primary_key[0]}) {
+//                return $relation_model->find_all_by_sql("SELECT $relation_source.* FROM $relation_source, {$relation->through}, $source
+//                    WHERE {$relation->through}.{$relation->key} = {$this->db->add_quotes($this->{$this->primary_key[0]}) }
+//                    AND {$relation->through}.{$relation->fk} = $relation_source.{$relation_model->primary_key[0]}
+//                    AND {$relation->through}.{$relation->key} = $source.{$this->primary_key[0]}
+//                    ORDER BY $relation_source.{$relation_model->primary_key[0]}");
+//            } else {
+//                return array();
+//            }
+//        }
     }
 
 }
