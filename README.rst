@@ -95,7 +95,9 @@ Para filtrar consultas el active record nos ofrece una clase DbQuery que nos per
 
     //el metodo get() crea y nos devuelve una instancia de DbQuery
 
-    $user->get()->where("nombres = :nom")->bindValue("nom", "Manuel José");
+    $user->creaetQuery()
+                ->where("nombres = :nom")
+                ->bindValue("nom", "Manuel José");
 
     //ya que el active record trabaja con PDO, y este permite crear consultas preparadas, es decir, los valores 
     //de variables no se colocan directamente en la cadena de consulta, sino que se pasan a traves de métodos
