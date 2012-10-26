@@ -1,5 +1,4 @@
 <?php
-
 /**
  * KumbiaPHP web & app Framework
  *
@@ -867,9 +866,8 @@ class Model implements Iterator, Countable
      * model : nombre del modelo al que se refiere
      * fk : campo por el cual se relaciona (llave foranea)
      */
-    protected function belongsTo($model, $fk = NULL)
+    protected function belongsTo($model, $fk)
     {
-        $fk || $fk = $this->getTable() . "_id";
         static::$relations[get_class($this)]['belongsTo'][$model] = $fk;
     }
 
@@ -933,10 +931,10 @@ class Model implements Iterator, Countable
         if (isset(static::$relations[get_class($this)]['belongsTo']) &&
                 isset(static::$relations[get_class($this)]['belongsTo'][$model])) {
 
-            $fk = static::$relations[get_class($this)]['belongsTo'][$model];                        
+            $fk = static::$relations[get_class($this)]['belongsTo'][$model];
             $model = new $model();
-            
-            return $model->findBy($fk, $this->{$this->metadata()->getPK()});
+
+            return $model->findBy($fk, $this->{$fk});
         }
 
         if (isset(static::$relations[get_class($this)]['hasOne']) &&
