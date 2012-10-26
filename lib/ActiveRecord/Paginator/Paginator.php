@@ -83,7 +83,7 @@ class Paginator
 
         $query->columns($arrayQuery['columns'])->limit($per_page)->offset($offset);
 
-        $items = $model->findAll();
+        $items = $model::findAll();
         
         $object = new \stdClass();
 

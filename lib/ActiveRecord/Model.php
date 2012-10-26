@@ -91,7 +91,7 @@ class Model implements Iterator, Countable
      * 
      * @var Obj
      */
-    protected $dbQuery = NULL;
+    protected static $dbQuery = NULL;
 
     /**
      * Posicion en el iterador
@@ -460,12 +460,10 @@ class Model implements Iterator, Countable
      * 
      * @return DbQuery
      */
-    public function createQuery()
+    public static function createQuery()
     {
         // Crea la instancia de DbQuery
-        $this->dbQuery = new DbQuery();
-
-        return $this->dbQuery;
+        return self::$dbQuery[get_called_class()] = new DbQuery();
     }
 
     /**
@@ -474,10 +472,10 @@ class Model implements Iterator, Countable
      * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function find($fetchMode = NULL)
+    public static function find($fetchMode = NULL)
     {
-        $this->dbQuery || $this->createQuery();
-        return $this->query($this->dbQuery->select(), $fetchMode);
+        $model = new static();
+        return $model->query(self::getDbQuery()->select(), $fetchMode);
     }
 
     /**
@@ -486,9 +484,9 @@ class Model implements Iterator, Countable
      * @param string $fetchMode
      * @return array
      */
-    public function findAll($fetchMode = NULL)
+    public static function findAll($fetchMode = NULL)
     {
-        return $this->find($fetchMode);
+        return self::find($fetchMode);
     }
 
     /**
@@ -497,13 +495,15 @@ class Model implements Iterator, Countable
      * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function first($fetchMode = NULL)
+    public static function first($fetchMode = NULL)
     {
-        $this->dbQuery || $this->createQuery();
-
+        $model = new static();
         // Realiza la busqueda y retorna el objeto ActiveRecord
-        return $this->query($this->dbQuery->select()->limit(1)
-                                ->offset(0), $fetchMode)->resultSet->fetch();
+        $query = self::getDbQuery()
+                ->select()
+                ->limit(1)
+                ->offset(0);
+        return $model->query($query, $fetchMode)->resultSet->fetch();
     }
 
     /**
@@ -514,12 +514,12 @@ class Model implements Iterator, Countable
      * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function findBy($column, $value, $fetchMode = NULL)
+    public static function findBy($column, $value, $fetchMode = NULL)
     {
-        $this->createQuery()
+        self::createQuery()
                 ->where("$column = :value")
                 ->bindValue('value', $value);
-        return $this->first($fetchMode);
+        return self::first($fetchMode);
     }
 
     /**
@@ -530,10 +530,10 @@ class Model implements Iterator, Countable
      * @param string $fetchMode
      * @return ActiveRecord
      */
-    public function findAllBy($column, $value, $fetchMode = NULL)
+    public static function findAllBy($column, $value, $fetchMode = NULL)
     {
         if (is_array($value)) {
-            $query = $this->createQuery();
+            $query = self::createQuery();
             $in = array();
             foreach ($value as $k => $v) {
                 $in[] = ":in_$k";
@@ -541,11 +541,11 @@ class Model implements Iterator, Countable
             }
             $query->where("$column IN (" . join(',', $in) . ")");
         } else {
-            $this->createQuery()
+            self::createQuery()
                     ->where("$column = :value")
                     ->bindValue('value', $value);
         }
-        return $this->find($fetchMode)->resultSet->fetchAll();
+        return self::find($fetchMode)->resultSet->fetchAll();
     }
 
     /**
@@ -555,9 +555,20 @@ class Model implements Iterator, Countable
      * @param string $fetchMode
      * @return Model
      */
-    public function findByPK($value, $fetchMode = NULL)
+    public static function findByPK($value, $fetchMode = NULL)
     {
-        return $this->findBy($this->metadata()->getPK(), $value, $fetchMode);
+        $model = new static();
+
+        $model = new static();
+
+        $pk = $model->metadata()->getPK();
+
+        $query = self::createQuery()
+                ->select()
+                ->where("$pk = :pk")
+                ->bindValue('pk', $value);
+        // Realiza la busqueda y retorna el objeto ActiveRecord
+        return $model->query($query, $fetchMode)->resultSet->fetch();
     }
 
     /**
@@ -641,12 +652,11 @@ class Model implements Iterator, Countable
      * @param array $data información a ser guardada
      * @return Bool
      */
-    public function updateAll($data)
+    public static function updateAll($data)
     {
-        $this->dbQuery || $this->createQuery();
-
+        $model = new static();
         // Ejecuta la consulta
-        return $this->query($this->dbQuery->update($data));
+        return $model->query(self::getDbQuery()->update($data));
     }
 
     /**
@@ -654,11 +664,11 @@ class Model implements Iterator, Countable
      * 
      * @return Bool
      */
-    public function deleteAll()
+    public static function deleteAll()
     {
-        $this->dbQuery || $this->createQuery();
+        $model = new static();
         // Ejecuta la consulta
-        return $this->query($this->dbQuery->delete());
+        return $model->query(self::getDbQuery()->delete());
     }
 
     /**
@@ -669,13 +679,11 @@ class Model implements Iterator, Countable
      */
     public function count()
     {
-        $this->dbQuery || $this->createQuery();
-
         if (NULL !== $this->pointer) {
             return $this->pointer;
         }
 
-        $this->dbQuery->columns("COUNT(*) AS n");
+        self::getDbQuery()->columns("COUNT(*) AS n");
         return $this->pointer = $this->first(self::FETCH_OBJ)->n;
     }
 
@@ -724,11 +732,8 @@ class Model implements Iterator, Countable
      */
     public function exists()
     {
-        // Objeto de consulta
-        $dbQuery = $this->createQuery();
-
         // Establece condicion de busqueda con clave primaria
-        $this->wherePK($dbQuery);
+        $this->wherePK(self::getDbQuery());
 
         return $this->existsOne();
     }
@@ -821,13 +826,13 @@ class Model implements Iterator, Countable
         return FALSE;
     }
 
-    public function paginate($page, $per_page = 10, $fetchMode = NULL)
+    public static function paginate($page, $per_page = 10, $fetchMode = NULL)
     {
-        $this->setFetchMode($fetchMode);
+        $model = new static();
 
-        $this->dbQuery || $this->createQuery();
+        $model->setFetchMode($fetchMode);
 
-        return Paginator::paginate($this, $this->dbQuery, $page, $per_page);
+        return Paginator::paginate($model, self::getDbQuery(), $page, $per_page);
     }
 
     public function save(array $data = array())
@@ -999,6 +1004,15 @@ class Model implements Iterator, Countable
 //                return array();
 //            }
 //        }
+    }
+
+    /**
+     *
+     * @return DbQuery 
+     */
+    private static function getDbQuery()
+    {
+        return isset(self::$dbQuery[get_called_class()]) ? self::$dbQuery[get_called_class()] : static::createQuery();
     }
 
 }
