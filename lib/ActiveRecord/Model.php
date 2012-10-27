@@ -1,5 +1,4 @@
 <?php
-
 /**
  * KumbiaPHP web & app Framework
  *
@@ -24,8 +23,6 @@
 namespace ActiveRecord;
 
 use \PDO;
-use \Iterator;
-use \Countable;
 use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Adapter\Adapter;
 use ActiveRecord\Metadata\Metadata;
@@ -44,7 +41,7 @@ use ActiveRecord\Exception\ActiveRecordException;
  * la tabla de la base de datos. Cuando se modifican los atributos del
  * objeto, se actualiza la fila de la base de datos.
  */
-class Model implements Iterator, Countable
+class Model
 {
     /**
      * Obtener datos cargados en objeto del Modelo
@@ -94,13 +91,6 @@ class Model implements Iterator, Countable
     protected static $dbQuery = NULL;
 
     /**
-     * Posicion en el iterador
-     *
-     * @var int
-     */
-    private $pointer = NULl;
-
-    /**
      * ResulSet PDOStatement
      * 
      * @var \PDOStatement
@@ -137,7 +127,7 @@ class Model implements Iterator, Countable
             $this->dump($data);
         }
         $this->initialize();
-        if (!isset(static::$relations[get_called_class()])) {
+        if (!isset(self::$relations[get_called_class()])) {
             $this->createRelations();
         }
     }
@@ -149,7 +139,7 @@ class Model implements Iterator, Countable
      */
     public function metadata()
     {
-        $model = get_class($this);
+        $model = get_called_class();
 
         if (!isset(self::$metadata[$model])) {
             self::$metadata[$model] = Adapter::factory($this->getConnection())
@@ -244,54 +234,6 @@ class Model implements Iterator, Countable
     }
 
     /**
-     * reset result set pointer 
-     * (implementation required by 'rewind()' method in Iterator interface)
-     */
-    public function rewind()
-    {
-        $this->pointer = 0;
-    }
-
-    /**
-     * get current row set in result set 
-     * (implementation required by 'current()' method in Iterator interface)
-     */
-    public function current()
-    {
-        if (!$this->valid()) {
-            throw new ActiveRecordException('No se pude obtener la fila actual');
-        }
-        return $this->resultSet->fetch();
-    }
-
-    /**
-     * Obtiene la posición actual del Puntero 
-     * 
-     */
-    public function key()
-    {
-        return $this->pointer;
-    }
-
-    /**
-     * Mueve el puntero a la siguiente posición 
-     * 
-     */
-    public function next()
-    {
-        ++$this->pointer;
-    }
-
-    /**
-     * Determina si el puntero del ResultSet es valido 
-     * 
-     */
-    public function valid()
-    {
-        return $this->pointer < $this->resultSet->rowCount();
-    }
-
-    /**
      * Indica el modo de obtener datos al ResultSet actual
      * 
      */
@@ -317,7 +259,7 @@ class Model implements Iterator, Countable
             case self::FETCH_MODEL:
             default:
                 // Instancias de un nuevo modelo, por lo tanto libre de los atributos de la instancia actual
-                $this->resultSet->setFetchMode(PDO::FETCH_INTO, new static());
+                $this->resultSet->setFetchMode(PDO::FETCH_CLASS, get_called_class());
         }
     }
 
@@ -328,7 +270,7 @@ class Model implements Iterator, Countable
      */
     public static function setTable($table)
     {
-        static::$table[get_called_class()] = $table;
+        self::$table[get_called_class()] = $table;
     }
 
     /**
@@ -340,14 +282,13 @@ class Model implements Iterator, Countable
     {
         // Asigna la tabla
         $modelName = get_called_class();
-        if (!isset(static::$table[$modelName])) {
-            static::$table[$modelName] = strtolower(basename($modelName));
-            static::$table[$modelName][0] = strtolower(static::$table[$modelName][0]);
-            static::$table[$modelName] = strtolower(preg_replace('/([A-Z])/', "_$1", static::$table[$modelName]));
+        if (!isset(self::$table[$modelName])) {
+            self::$table[$modelName] = basename($modelName);
+            self::$table[$modelName] = strtolower(preg_replace('/(.+)([A-Z])/', "$1_$2", self::$table[$modelName]));
         }
 
         // Tabla
-        return static::$table[$modelName];
+        return self::$table[$modelName];
     }
 
     /**
@@ -428,11 +369,13 @@ class Model implements Iterator, Countable
      * 
      * @param DbQuery $dbQuery Objeto de consulta
      * @param string $fetchMode
-     * @return ActiveRecord
+     * @return \PDOStatement
      */
     public function query($dbQuery, $fetchMode = NULL)
     {
         $dbQuery->table(static::getTable());
+
+        self::createQuery();
 
         // Asigna el esquema si existe
         if ($this->schema) {
@@ -449,7 +392,7 @@ class Model implements Iterator, Countable
 
         // Ejecuta la consulta
         $this->resultSet->execute($dbQuery->getBind());
-        return $this;
+        return $this->resultSet;
 //        } catch (\PDOException $e) {
 //            // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
 //        }
@@ -470,12 +413,12 @@ class Model implements Iterator, Countable
      * Efectua una busqueda
      *
      * @param string $fetchMode
-     * @return ActiveRecord
+     * @return Model
      */
     public static function find($fetchMode = NULL)
     {
         $model = new static();
-        return $model->query(self::getDbQuery()->select(), $fetchMode);
+        return $model->query(self::getDbQuery()->select(), $fetchMode)->fetch();
     }
 
     /**
@@ -486,7 +429,8 @@ class Model implements Iterator, Countable
      */
     public static function findAll($fetchMode = NULL)
     {
-        return self::find($fetchMode);
+        $model = new static();
+        return $model->query(self::getDbQuery()->select(), $fetchMode)->fetchAll();
     }
 
     /**
@@ -503,7 +447,7 @@ class Model implements Iterator, Countable
                 ->select()
                 ->limit(1)
                 ->offset(0);
-        return $model->query($query, $fetchMode)->resultSet->fetch();
+        return $model->query($query, $fetchMode)->fetch();
     }
 
     /**
@@ -545,7 +489,7 @@ class Model implements Iterator, Countable
                     ->where("$column = :value")
                     ->bindValue('value', $value);
         }
-        return self::find($fetchMode)->resultSet->fetchAll();
+        return self::findAll($fetchMode);
     }
 
     /**
@@ -568,7 +512,7 @@ class Model implements Iterator, Countable
                 ->where("$pk = :pk")
                 ->bindValue('pk', $value);
         // Realiza la busqueda y retorna el objeto ActiveRecord
-        return $model->query($query, $fetchMode)->resultSet->fetch();
+        return $model->query($query, $fetchMode)->fetch();
     }
 
     /**
@@ -679,12 +623,8 @@ class Model implements Iterator, Countable
      */
     public function count()
     {
-        if (NULL !== $this->pointer) {
-            return $this->pointer;
-        }
-
         self::getDbQuery()->columns("COUNT(*) AS n");
-        return $this->pointer = $this->first(self::FETCH_OBJ)->n;
+        return $this->first(self::FETCH_OBJ)->n;
     }
 
     /**
@@ -886,7 +826,7 @@ class Model implements Iterator, Countable
     protected function belongsTo($model, $fk)
     {
         $fk || $fk = $model::getTable() . '_id';
-        static::$relations[get_called_class()]['belongsTo'][$model] = $fk;
+        self::$relations[get_called_class()]['belongsTo'][$model] = $fk;
     }
 
     /**
@@ -900,7 +840,7 @@ class Model implements Iterator, Countable
     protected function hasOne($model, $fk = NULL)
     {
         $fk || $fk = static::getTable() . "_id";
-        static::$relations[get_called_class()]['hasOne'][$model] = $fk;
+        self::$relations[get_called_class()]['hasOne'][$model] = $fk;
     }
 
     /**
@@ -914,7 +854,7 @@ class Model implements Iterator, Countable
     protected function hasMany($model, $fk = NULL)
     {
         $fk || $fk = static::getTable() . "_id";
-        static::$relations[get_called_class()]['hasMany'][$model] = $fk;
+        self::$relations[get_called_class()]['hasMany'][$model] = $fk;
     }
 
     /**
@@ -931,7 +871,7 @@ class Model implements Iterator, Countable
     {
         $fk || $fk = $model::getTable() . '_id';
         $key || $key = static::getTable() . '_id';
-        static::$relations[get_called_class()]['hasAndBelongsToMany']
+        self::$relations[get_called_class()]['hasAndBelongsToMany']
                 [$model] = compact('through', 'fk', 'key');
     }
 
@@ -944,66 +884,58 @@ class Model implements Iterator, Countable
      */
     public function get($model)
     {
-        if (!isset(static::$relations[get_called_class()])) {
+        if (!isset(self::$relations[get_called_class()])) {
             return FALSE;
         }
 
-        if (isset(static::$relations[get_called_class()]['belongsTo']) &&
-                isset(static::$relations[get_called_class()]['belongsTo'][$model])) {
+        if (isset(self::$relations[get_called_class()]['belongsTo']) &&
+                isset(self::$relations[get_called_class()]['belongsTo'][$model])) {
 
-            $fk = static::$relations[get_called_class()]['belongsTo'][$model];
-            $model = new $model();
+            $fk = self::$relations[get_called_class()]['belongsTo'][$model];
 
-            return $model->findBy($fk, $this->{$fk});
+            return $model::findBy($fk, $this->{$fk});
         }
 
-        if (isset(static::$relations[get_called_class()]['hasOne']) &&
-                isset(static::$relations[get_called_class()]['hasOne'][$model])) {
+        if (isset(self::$relations[get_called_class()]['hasOne']) &&
+                isset(self::$relations[get_called_class()]['hasOne'][$model])) {
 
-            $fk = static::$relations[get_called_class()]['hasOne'][$model];
-            $model = new $model();
+            $fk = self::$relations[get_called_class()]['hasOne'][$model];
 
-            return $model->findBy($model->metadata()->getPK(), $this->{$fk});
+            return $model::findBy(self::$metadata[$model]->getPK(), $this->{$fk});
         }
 
-        if (isset(static::$relations[get_called_class()]['hasMany']) &&
-                isset(static::$relations[get_called_class()]['hasMany'][$model])) {
+        if (isset(self::$relations[get_called_class()]['hasMany']) &&
+                isset(self::$relations[get_called_class()]['hasMany'][$model])) {
 
-            $fk = static::$relations[get_called_class()]['hasMany'][$model];
-            $model = new $model();
+            $fk = self::$relations[get_called_class()]['hasMany'][$model];
 
-            return $model->findAllBy($fk, $this->{$this->metadata()->getPK()});
+            return $model::findAllBy($fk, $this->{$this->metadata()->getPK()});
         }
 
-//        if (array_key_exists($mmodel, $this->_has_and_belongs_to_many)) {
-//            $relation = $this->_has_and_belongs_to_many[$mmodel];
-//            $relation_model = self::get($relation->model);
-//            $source = ($this->schema ? "{$this->schema}." : NULL ) . $this->source;
-//            $relation_source = ($relation_model->schema ? "{$relation_model->schema}." : NULL ) . $relation_model->source;
-//            /**
-//             * Cargo atraves de que tabla se efectuara la relacion
-//             *
-//             */
-//            if (!isset($relation->through)) {
-//                if ($source > $relation_source) {
-//                    $relation->through = "{$this->source}_{$relation_source}";
-//                } else {
-//                    $relation->through = "{$relation_source}_{$this->source}";
-//                }
-//            } else {
-//                $through = explode('/', $relation->through);
-//                $relation->through = end($through);
-//            }
-//            if ($this->{$this->primary_key[0]}) {
-//                return $relation_model->find_all_by_sql("SELECT $relation_source.* FROM $relation_source, {$relation->through}, $source
-//                    WHERE {$relation->through}.{$relation->key} = {$this->db->add_quotes($this->{$this->primary_key[0]}) }
-//                    AND {$relation->through}.{$relation->fk} = $relation_source.{$relation_model->primary_key[0]}
-//                    AND {$relation->through}.{$relation->key} = $source.{$this->primary_key[0]}
-//                    ORDER BY $relation_source.{$relation_model->primary_key[0]}");
-//            } else {
-//                return array();
-//            }
-//        }
+        if (isset(self::$relations[get_called_class()]['hasAndBelongsToMany']) &&
+                isset(self::$relations[get_called_class()]['hasAndBelongsToMany'][$model])) {
+
+            $relation = self::$relations[get_called_class()]['hasAndBelongsToMany'][$model];
+
+            $instance = new $model();
+
+            $fk = $relation['fk'];
+            $key = $relation['key'];
+            $pk1 = $this->metadata()->getPK();
+            $pk2 = $instance->metadata()->getPK();
+            $thisTable = static::getTable();
+            $modelTable = $model::getTable();
+            $through = $relation['through']::getTable();
+
+            $model::createQuery()
+                    ->select("$modelTable.*")
+                    ->join("$through as th", "th.{$fk} = {$modelTable}.{$pk2}")
+                    ->join("$thisTable as this", "this.{$pk1} = th.{$key}")
+                    ->where("this.{$pk1} = :pk")
+                    ->bindValue('pk', $this->{$pk1});
+
+            return $model::findAll();
+        }
     }
 
     /**
