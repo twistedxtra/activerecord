@@ -74,16 +74,16 @@ class Paginator
      *
      * @return object
      * */
-    public static function paginate(Model $model,  DbQuery $query, $page, $per_page)
+    public static function paginate(Model $model, DbQuery $query, $page, $per_page)
     {
         $arrayQuery = $query->getSqlArray() + array('columns' => '*');
-        
+
         $numItems = $model->count();
         $offset = ($page - 1) * $per_page;
 
         $query->columns($arrayQuery['columns'])->limit($per_page)->offset($offset);
 
-        $items = $model::findAll();
+        $items = $model->query($query)->fetchAll();
         
         $object = new \stdClass();
 
@@ -98,4 +98,5 @@ class Paginator
 
         return $object;
     }
+
 }
