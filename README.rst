@@ -64,11 +64,9 @@ La lib ofrece una serie de métodos para la realización de consultas a nuestra 
     
     <?php
 
-    $user = new Usuarios();
-
     //consultando todos los registros en la tabla.
 
-    $result = $user->findAll(); //nos devuelve todos los registros de la tabla en la base de datos.
+    $result = Usuarios::findAll(); //nos devuelve todos los registros de la tabla en la base de datos.
 
     foreach($result as $e){
         echo $e->nombres; //cada elemento iterado en el foreach es un objeto Usuarios
@@ -76,7 +74,7 @@ La lib ofrece una serie de métodos para la realización de consultas a nuestra 
 
     //obteniendo el resultados como una matriz
 
-    $result = $user->findAll("array"); //nos devuelve todos los registros de la tabla en la base de datos como un arreglo. 
+    $result = Usuarios::findAll("array"); //nos devuelve todos los registros de la tabla en la base de datos como un arreglo. 
 
     foreach($result as $e){
         echo $e["nombres"]; //cada elemento iterado en el foreach es un arreglo
@@ -91,11 +89,9 @@ Para filtrar consultas el active record nos ofrece una clase DbQuery que nos per
 
     <?php
 
-    $user = new Usuarios();
+    //el metodo creaetQuery() crea y nos devuelve una instancia de DbQuery
 
-    //el metodo get() crea y nos devuelve una instancia de DbQuery
-
-    $user->creaetQuery()
+    Usuarios::creaetQuery()
                 ->where("nombres = :nom")
                 ->bindValue("nom", "Manuel José");
 
@@ -104,7 +100,7 @@ Para filtrar consultas el active record nos ofrece una clase DbQuery que nos per
     //de la clase PDO, que se encargan de filtrar y sanitizar los valores de la consulta, el DbQuery permite establecer
     //estos valores directamente en su clase a traves de los métodos bindValue($param,$value) y bind($params).
 
-    $result = $user->findAll(); //aunque llamemos al mismo metodo findAll, esté va a filtrar los datos por medio de
+    $result = Usuarios::findAll(); //aunque llamemos al mismo metodo findAll, esté va a filtrar los datos por medio de
                                 //las especificaciones indicadas en la instancia del DbQuery.
 
     //mostramos los registros que nos devolvió la consulta:
