@@ -891,6 +891,10 @@ class Model
         if (isset(self::$relations[get_called_class()]['belongsTo']) &&
                 isset(self::$relations[get_called_class()]['belongsTo'][$model])) {
 
+            if (!isset($this->{$fk})) {
+                return FALSE;
+            }
+
             $fk = self::$relations[get_called_class()]['belongsTo'][$model];
 
             return $model::findBy($fk, $this->{$fk});
@@ -898,6 +902,10 @@ class Model
 
         if (isset(self::$relations[get_called_class()]['hasOne']) &&
                 isset(self::$relations[get_called_class()]['hasOne'][$model])) {
+
+            if (!isset($this->{$fk})) {
+                return FALSE;
+            }
 
             $fk = self::$relations[get_called_class()]['hasOne'][$model];
 
@@ -907,6 +915,10 @@ class Model
         if (isset(self::$relations[get_called_class()]['hasMany']) &&
                 isset(self::$relations[get_called_class()]['hasMany'][$model])) {
 
+            if (!isset($this->{$this->metadata()->getPK()})) {
+                return array();
+            }
+
             $fk = self::$relations[get_called_class()]['hasMany'][$model];
 
             return $model::findAllBy($fk, $this->{$this->metadata()->getPK()});
@@ -914,6 +926,12 @@ class Model
 
         if (isset(self::$relations[get_called_class()]['hasAndBelongsToMany']) &&
                 isset(self::$relations[get_called_class()]['hasAndBelongsToMany'][$model])) {
+            
+            $pk1 = $this->metadata()->getPK();
+            
+            if (!isset($this->{$pk1})) {
+                return array();
+            }
 
             $relation = self::$relations[get_called_class()]['hasAndBelongsToMany'][$model];
 
@@ -921,7 +939,6 @@ class Model
 
             $fk = $relation['fk'];
             $key = $relation['key'];
-            $pk1 = $this->metadata()->getPK();
             $pk2 = $instance->metadata()->getPK();
             $thisTable = static::getTable();
             $modelTable = $model::getTable();
