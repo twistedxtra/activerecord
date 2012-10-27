@@ -621,10 +621,10 @@ class Model
      * @param string $column
      * @return integer
      */
-    public function count()
+    public static function count()
     {
         self::getDbQuery()->columns("COUNT(*) AS n");
-        return $this->first(self::FETCH_OBJ)->n;
+        return self::first(self::FETCH_OBJ)->n;
     }
 
     /**
@@ -634,7 +634,7 @@ class Model
      */
     public function existsOne()
     {
-        return $this->count() > 0;
+        return self::count() > 0;
     }
 
     /**
