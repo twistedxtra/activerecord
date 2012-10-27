@@ -24,6 +24,7 @@ namespace ActiveRecord\Query;
 
 class DbQuery
 {
+
     /**
      * Partes de la consulta sql
      *
@@ -37,7 +38,7 @@ class DbQuery
      * @param boolean $distinct
      * @return DbQuery
      */
-    public function distinct($distinct) 
+    public function distinct($distinct)
     {
         $this->sql['distinct'] = $distinct;
         return $this;
@@ -49,12 +50,12 @@ class DbQuery
      * @param string $conditions condiciones AND
      * @return DbQuery
      */
-    public function where($conditions) 
+    public function where($conditions)
     {
         $this->sql['where'][] = $this->_where($conditions);
         return $this;
     }
-	
+
     /**
      * Clausula WHERE con OR
      * 
@@ -66,7 +67,7 @@ class DbQuery
         $this->sql['where'][] = $this->_where($conditions, FALSE);
         return $this;
     }
-	
+
     /**
      * Método interno para crear la Clusula WHERE
      * 
@@ -74,18 +75,19 @@ class DbQuery
      * @param bool   $type TRUE = AND; FALSE = OR
      * @return string clausula
      */
-    protected function _where($conditions, $type=TRUE)
+    protected function _where($conditions, $type = TRUE)
     {
-        $cond=NULL;
-        if(isset($this->sql['where'])){
-            if($type===TRUE){
+        $cond = NULL;
+        if (isset($this->sql['where'])) {
+            if ($type === TRUE) {
                 $cond = ' AND ';
-            }else{
+            } else {
                 $cond = ' OR ';
             }
         }
         return $cond . "($conditions)";
     }
+
     /**
      * Parámetros que seran enlazados a la setencia SQL
      * 
@@ -95,16 +97,16 @@ class DbQuery
     public function bind($bind)
     {
         foreach ($bind as $k => $v) {
-        	$this->sql['bind'][":$k"] = $v;
+            $this->sql['bind'][":$k"] = $v;
         }
         return $this;
     }
-	
+
     /**
      * Parámetro que sera enlazado a la setencia SQL
      * 
      * @param string $bind
-	 * @param string $value
+     * @param string $value
      * @return DbQuery
      */
     public function bindValue($bind, $value)
@@ -112,7 +114,7 @@ class DbQuery
         $this->sql['bind'][":$bind"] = $value;
         return $this;
     }
-	
+
     /**
      * Retorna los elementos para ser enlazados
      * 
@@ -120,12 +122,12 @@ class DbQuery
      */
     public function getBind()
     {
-        if(isset($this->sql['bind'])){
+        if (isset($this->sql['bind'])) {
             return $this->sql['bind'];
         }
         return NULL;
     }
-    
+
     /**
      * Clausula INNER JOIN
      *
@@ -133,12 +135,12 @@ class DbQuery
      * @param string $conditions condiciones
      * @return DbQuery
      */
-    public function join($table, $conditions) 
+    public function join($table, $conditions)
     {
         $this->sql['join'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
-    
+
     /**
      * Clausula LEFT OUTER JOIN
      *
@@ -146,12 +148,12 @@ class DbQuery
      * @param string $conditions condiciones
      * @return DbQuery
      */
-    public function leftJoin($table, $conditions) 
+    public function leftJoin($table, $conditions)
     {
         $this->sql['leftJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
-    
+
     /**
      * Clausula RIGHT OUTER JOIN
      *
@@ -159,12 +161,12 @@ class DbQuery
      * @param string $conditions condiciones
      * @return DbQuery
      */
-    public function rightJoin($table, $conditions) 
+    public function rightJoin($table, $conditions)
     {
         $this->sql['rightJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
-    
+
     /**
      * Clausula FULL JOIN
      *
@@ -172,19 +174,19 @@ class DbQuery
      * @param string $conditions condiciones
      * @return DbQuery
      */
-    public function fullJoin($table, $conditions) 
+    public function fullJoin($table, $conditions)
     {
         $this->sql['fullJoin'][] = array('table' => $table, 'conditions' => $conditions);
         return $this;
     }
-    
+
     /**
      * Columnas de la consulta
      *
      * @param string $table nombre de tabla
      * @return DbQuery
      */
-    public function table($table) 
+    public function table($table)
     {
         $this->sql['table'] = $table;
         return $this;
@@ -196,7 +198,7 @@ class DbQuery
      * @param string $schema schema donde se ubica la tabla
      * @return DbQuery
      */
-    public function schema($schema) 
+    public function schema($schema)
     {
         $this->sql['schema'] = $schema;
         return $this;
@@ -208,23 +210,23 @@ class DbQuery
      * @param string $criteria criterio de ordenamiento
      * @return DbQuery
      */
-    public function order($criteria) 
+    public function order($criteria)
     {
         $this->sql['order'] = $criteria;
         return $this;
     }
-    
+
     /**
      * Clausula GROUP
      *
      * @param string $columns columnas
      * @return DbQuery
      */
-    public function group($columns) 
+    public function group($columns)
     {
         $this->sql['group'] = $columns;
         return $this;
-    }    
+    }
 
     /**
      * Clausula HAVING
@@ -232,7 +234,7 @@ class DbQuery
      * @param string $conditions condiciones
      * @return DbQuery
      */
-    public function having($conditions) 
+    public function having($conditions)
     {
         $this->sql['having'] = $conditions;
         return $this;
@@ -244,11 +246,11 @@ class DbQuery
      * @param int $limit
      * @return DbQuery
      */
-    public function limit($limit) 
+    public function limit($limit)
     {
         $this->sql['limit'] = $limit;
         return $this;
-    }   
+    }
 
     /**
      * Clausula OFFSET
@@ -256,11 +258,11 @@ class DbQuery
      * @param int $offset
      * @return DbQuery
      */
-    public function offset($offset) 
+    public function offset($offset)
     {
         $this->sql['offset'] = $offset;
         return $this;
-    }  
+    }
 
     /**
      * Construye la consulta SELECT
@@ -268,34 +270,35 @@ class DbQuery
      * @param string $columns columnas
      * @return DbQuery
      */
-    public function select($columns = NULL) 
+    public function select($columns = NULL)
     {
         $this->sql['command'] = 'select';
-		
-		if($columns) {
-			$this->columns($columns);
-		}
-	
+
+        if ($columns) {
+            $this->columns($columns);
+        }
+
         return $this;
     }
+
     /**
      * Columnas a utilizar en el Query
-	 *
-	 * @param string $columns columnas
+     *
+     * @param string $columns columnas
      * @return DbQuery
      */
     public function columns($columns)
     {
         $this->sql['columns'] = $columns;
-		return $this;
+        return $this;
     }
-	
+
     /**
      * Construye la consulta DELETE
      *
      * @return DbQuery
      */
-    public function delete() 
+    public function delete()
     {
         $this->sql['command'] = 'delete';
         return $this;
@@ -307,28 +310,28 @@ class DbQuery
      * @param array $data claves/valores
      * @return DbQuery
      */
-    public function update($data) 
+    public function update($data)
     {
         $this->bind($data);
         $this->sql['data'] = $data;
-		$this->sql['command'] = 'update';
+        $this->sql['command'] = 'update';
         return $this;
     }
-    
+
     /**
      * Construye la consulta UPDATE
      *
      * @param string | array $data columnas, o array de claves/valores
      * @return DbQuery
      */
-    public function insert($data) 
+    public function insert($data)
     {
         $this->bind($data);
         $this->sql['data'] = $data;
-		$this->sql['command'] = 'insert';
+        $this->sql['command'] = 'insert';
         return $this;
     }
-    
+
     /**
      * Obtiene el array base con las partes de la consulta SQL
      *
@@ -338,4 +341,5 @@ class DbQuery
     {
         return $this->sql;
     }
+
 }
