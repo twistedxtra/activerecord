@@ -578,7 +578,6 @@ class Model
         // Si es un array, se cargan los atributos en el objeto
         if (is_array($data)) {
             $this->dump($data);
-            var_dump($data, $this);
         }
 
         // Callback antes de crear
