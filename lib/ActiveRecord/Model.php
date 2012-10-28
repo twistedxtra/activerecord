@@ -27,6 +27,7 @@ use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Adapter\Adapter;
 use ActiveRecord\Metadata\Metadata;
 use ActiveRecord\Paginator\Paginator;
+use ActiveRecord\Exception\SqlException;
 use ActiveRecord\Exception\ActiveRecordException;
 
 /**
@@ -202,6 +203,16 @@ class Model
     }
 
     /**
+     * Callback antes de guardar
+     * 
+     * @return boolean
+     */
+    protected function beforeSave()
+    {
+        
+    }
+
+    /**
      * Callback para realizar validaciones
      * 
      * @return boolean
@@ -217,6 +228,16 @@ class Model
      * @return boolean
      */
     protected function afterUpdate()
+    {
+        
+    }
+
+    /**
+     * Callback despues de guardar
+     * 
+     * @return boolean
+     */
+    protected function afterSave()
     {
         
     }
@@ -382,20 +403,20 @@ class Model
             $dbQuery->schema($this->schema);
         }
 
-//        try {
-        // Obtiene una instancia del adaptador y prepara la consulta
-        $this->resultSet = Adapter::factory($this->connection)
-                ->prepareDbQuery($dbQuery);
+        try {
+            // Obtiene una instancia del adaptador y prepara la consulta
+            $this->resultSet = Adapter::factory($this->connection)
+                    ->prepareDbQuery($dbQuery);
 
-        // Indica el modo de obtener los datos en el ResultSet
-        $this->fetchMode($fetchMode);
+            // Indica el modo de obtener los datos en el ResultSet
+            $this->fetchMode($fetchMode);
 
-        // Ejecuta la consulta
-        $this->resultSet->execute($dbQuery->getBind());
-        return $this->resultSet;
-//        } catch (\PDOException $e) {
-//            // Aqui debemos ir a cada adapter y verificar el código de error SQLSTATE
-//        }
+            // Ejecuta la consulta
+            $this->resultSet->execute($dbQuery->getBind());
+            return $this->resultSet;
+        } catch (\PDOException $e) {
+            throw new SqlException($e, $this->resultSet);
+        }
     }
 
     /**
@@ -557,23 +578,30 @@ class Model
         // Si es un array, se cargan los atributos en el objeto
         if (is_array($data)) {
             $this->dump($data);
+            var_dump($data, $this);
         }
 
         // Callback de validaciónes
-        if ($this->validate(FALSE) === FALSE) {
+        if (FALSE === $this->validate(FALSE)) {
             return FALSE;
         }
 
         // Callback antes de crear
-        if ($this->beforeCreate() === FALSE) {
+        if (FALSE === $this->beforeCreate() || FALSE === $this->beforeSave()) {
             return FALSE;
         }
 
         // Nuevo contenedor de consulta
         $dbQuery = new DbQuery();
 
+        $data = $this->getTableValues();
+
+        if (isset($data[$this->metadata()->getPK()])) {
+            unset($data[$this->metadata()->getPK()]);
+        }
+
         // Ejecuta la consulta
-        if ($this->query($dbQuery->insert($this->getTableValues()))) {
+        if ($this->query($dbQuery->insert($data))) {
 
             // Convenio patron identidad en activerecord si PK es "id"
             if ($this->metadata()->getPK() === 'id' && (!isset($this->id) || $this->id == '')) {
@@ -584,6 +612,7 @@ class Model
 
             // Callback despues de crear
             $this->afterCreate();
+            $this->afterSave();
             return $this;
         }
 
@@ -692,12 +721,12 @@ class Model
         }
 
         // Callback de validaciónes
-        if ($this->validate(TRUE) === FALSE) {
+        if (FALSE === $this->validate(TRUE)) {
             return FALSE;
         }
 
         // Callback antes de actualizar
-        if ($this->beforeUpdate() === FALSE) {
+        if (FALSE === $this->beforeUpdate() || FALSE === $this->beforeSave()) {
             return FALSE;
         }
 
@@ -715,6 +744,7 @@ class Model
         if ($this->query($dbQuery->update($this->getTableValues()))) {
             // Callback despues de actualizar
             $this->afterUpdate();
+            $this->afterSave();
             return $this;
         }
 
@@ -794,7 +824,7 @@ class Model
      */
     public function begin()
     {
-        return DbAdapter::factory($this->_connection)->pdo()->beginTransaction();
+        return Adapter::factory($this->connection)->pdo()->beginTransaction();
     }
 
     /**
@@ -803,7 +833,7 @@ class Model
      */
     public function rollback()
     {
-        return DbAdapter::factory($this->_connection)->pdo()->rollBack();
+        return Adapter::factory($this->connection)->pdo()->rollBack();
     }
 
     /**
@@ -812,7 +842,7 @@ class Model
      */
     public function commit()
     {
-        return DbAdapter::factory($this->_connection)->pdo()->commit();
+        return Adapter::factory($this->connection)->pdo()->commit();
     }
 
     /**
@@ -926,9 +956,9 @@ class Model
 
         if (isset(self::$relations[get_called_class()]['hasAndBelongsToMany']) &&
                 isset(self::$relations[get_called_class()]['hasAndBelongsToMany'][$model])) {
-            
+
             $pk1 = $this->metadata()->getPK();
-            
+
             if (!isset($this->{$pk1})) {
                 return array();
             }
@@ -947,12 +977,14 @@ class Model
             $model::createQuery()
                     ->select("$modelTable.*")
                     ->join("$through as th", "th.{$fk} = {$modelTable}.{$pk2}")
-                    ->join("$thisTable as this", "this.{$pk1} = th.{$key}")
-                    ->where("this.{$pk1} = :pk")
+                    //->join("$thisTable as this", "this.{$pk1} = th.{$key}")
+                    ->where("th.{$key} = :pk")
+                    //->where("this.{$pk1} = :pk")
                     ->bindValue('pk', $this->{$pk1});
-
+                    
             return $model::findAll();
         }
+        throw new ActiveRecordException("No existe la asociacion con $model en el modelo " . get_called_class());
     }
 
     /**
