@@ -581,13 +581,13 @@ class Model
             var_dump($data, $this);
         }
 
-        // Callback de validaciónes
-        if (FALSE === $this->validate(FALSE)) {
+        // Callback antes de crear
+        if (FALSE === $this->beforeCreate() || FALSE === $this->beforeSave()) {
             return FALSE;
         }
 
-        // Callback antes de crear
-        if (FALSE === $this->beforeCreate() || FALSE === $this->beforeSave()) {
+        // Callback de validaciónes
+        if (FALSE === $this->validate(FALSE)) {
             return FALSE;
         }
 
@@ -720,13 +720,13 @@ class Model
             $this->dump($data);
         }
 
-        // Callback de validaciónes
-        if (FALSE === $this->validate(TRUE)) {
-            return FALSE;
-        }
-
         // Callback antes de actualizar
         if (FALSE === $this->beforeUpdate() || FALSE === $this->beforeSave()) {
+            return FALSE;
+        }
+        
+        // Callback de validaciónes
+        if (FALSE === $this->validate(TRUE)) {
             return FALSE;
         }
 
