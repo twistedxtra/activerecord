@@ -17,6 +17,7 @@ class Parameters
     protected $dbName;
     protected $host = 'localhost';
     protected $type;
+    protected $charset;
 
     function __construct($id, array $config = array())
     {
@@ -27,6 +28,7 @@ class Parameters
         isset($config['host']) && $this->host = $config['host'];
         isset($config['type']) && $this->type = $config['type'];
         isset($config['port']) && $this->port = $config['port'];
+        isset($config['charset']) && $this->charset = $config['charset'];
     }
 
     public function getId()
@@ -97,6 +99,16 @@ class Parameters
     public function setType($type)
     {
         $this->type = $type;
+    }
+
+    public function getCharset()
+    {
+        return $this->charset;
+    }
+
+    public function setCharset($charset)
+    {
+        $this->charset = $charset;
     }
 
     public function toArray()

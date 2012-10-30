@@ -23,9 +23,9 @@
 
 namespace ActiveRecord\DbPool;
 
+use \PDO;
 use ActiveRecord\Config\Config;
 use ActiveRecord\Config\Parameters;
-use \PDO;
 
 /**
  * Clase que maneja el pool de conexiones
@@ -47,7 +47,7 @@ class DbPool
      *
      * @param string $connection conexion a la base de datos en databases.ini
      * @param boolean $new nueva conexion
-     * @return db
+     * @return PDO
      */
     public static function factory(Parameters $config)
     {

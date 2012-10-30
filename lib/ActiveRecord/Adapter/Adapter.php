@@ -1,4 +1,5 @@
 <?php
+
 /**
  * KumbiaPHP web & app Framework
  *
@@ -22,11 +23,11 @@
 
 namespace ActiveRecord\Adapter;
 
+use PDO;
 use ActiveRecord\Config\Config;
 use ActiveRecord\DbPool\DbPool;
 use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Config\Parameters;
-use PDO;
 
 abstract class Adapter
 {
@@ -62,6 +63,10 @@ abstract class Adapter
     public function __construct(Parameters $config)
     {
         $this->config = $config;
+        if ($charset = $config->getCharset()) {
+            DbPool::factory($config)
+                    ->exec("SET CHARACTER SET $charset");
+        }
     }
 
     /**
