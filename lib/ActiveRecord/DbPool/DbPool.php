@@ -1,5 +1,4 @@
 <?php
-
 /**
  * KumbiaPHP web & app Framework
  *
@@ -40,6 +39,7 @@ class DbPool
      * @var array
      * */
     protected static $connections = array();
+    protected static $attributes = array();
 
     /**
      * Realiza una conexión directa al motor de base de datos
@@ -66,7 +66,7 @@ class DbPool
             self::$connections[$config->getId()] = new PDO(
                             $config->getType() . ':host=' . $config->getHost() . ';dbname=' . $config->getDbName(),
                             $config->getUsername(),
-                            $config->getPassword());
+                            $config->getPassword(), self::$attributes);
 
             self::$connections[$config->getId()]
                     ->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -75,6 +75,11 @@ class DbPool
         } catch (\PDOException $e) {
             throw new \PDOException($e->getMessage());
         }
+    }
+
+    public static function setAttributes(array $attributes)
+    {
+        self::$attributes = $attributes;
     }
 
 }
