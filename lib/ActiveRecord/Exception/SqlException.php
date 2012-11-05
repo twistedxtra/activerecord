@@ -13,13 +13,15 @@ use \PDOStatement;
 class SqlException extends Exception
 {
 
-    function __construct(Exception $e, PDOStatement $st)
+    function __construct(Exception $e, PDOStatement $st = NULL)
     {
-        parent::__construct($e->getMessage(), $e->getCode());
+        parent::__construct($e->getMessage());
 
-        ob_start();
-        $st->debugDumpParams();
-        $this->message .= '<pre>' . ob_get_clean() . '</pre>';
+        if ($st) {
+            ob_start();
+            $st->debugDumpParams();
+            $this->message .= '<pre>' . ob_get_clean() . '</pre>';
+        }
     }
 
 }
