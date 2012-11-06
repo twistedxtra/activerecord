@@ -17,15 +17,16 @@
  *
  * @category   Kumbia
  * @package    ActiveRecord
+ * @subpackage Db
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
+ * @copyright  Copyright (c) 2005-2012 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-namespace ActiveRecord\Adapter;
+namespace ActiveRecord\Db\Adapter;
 
-use ActiveRecord\Adapter\Adapter;
-use ActiveRecord\Metadata\Metadata;
+use ActiveRecord\Db\Column;
+use ActiveRecord\Db\Adapter\Adapter;
 
 /**
  * \ActiveRecord\Adapter\Adapter\Mysql
@@ -45,58 +46,59 @@ class Mysql extends Adapter
     public function describe($table, $schema = null)
     {
         try {
-            $results = $this->pdo()->query("DESCRIBE $table");
+            $results = $this->pdo->query("DESCRIBE $table");
 
             if ($results) {
-                $metadata = new Metadata();
+                $describe = array();
                 while ($field = $results->fetchObject()) {
+
                     //Nombre del Campo
-                    $attribute = $metadata->attribute($field->Field);
+                    $column = new Column();
+
                     //alias
-                    $attribute->alias = ucwords(strtr($field->Field, '_-', '  '));
+                    $column->alias = ucwords(strtr($field->Field, '_-', '  '));
 
                     // autoincremental
-                    if ($field->Extra === 'auto_increment') {
-                        $attribute->autoIncrement = TRUE;
+                    if ($column->Extra === 'auto_increment') {
+                        $column->autoIncrement = TRUE;
                     }
 
                     // valor por defecto
-                    $attribute->default = $field->Default;
+                    $column->default = $field->Default;
 
                     //puede ser null?
                     if ($field->Null == 'NO') {
-                        $attribute->notNull = TRUE;
+                        $column->notNull = TRUE;
                     }
 
                     //tipo de dato y longitud
                     if (preg_match('/^(\w+)\((\w+)\)$/', $field->Type, $matches)) {
-                        $attribute->type = $matches[1];
-                        $attribute->length = $matches[2];
+                        $column->type = $matches[1];
+                        $column->length = $matches[2];
                     } else {
-                        $attribute->type = $field->Type;
-                        $attribute->length = NULL;
+                        $column->type = $field->Type;
+                        $column->length = NULL;
                     }
 
                     //indices
                     switch ($field->Key) {
                         case 'PRI':
-                            $metadata->setPK($field->Field);
-                            $attribute->PK = TRUE;
+                            $column->PK = TRUE;
                             break;
                         case 'FK':
-                            $metadata->setFK($field->Field);
-                            $attribute->FK = TRUE;
+                            $column->FK = TRUE;
                             break;
                         case 'UNI':
-                            $attribute->unique = TRUE;
+                            $column->unique = TRUE;
                             break;
                     }
+                    $describe[] = $column;
                 }
             }
         } catch (\PDOException $e) {
             throw new \PDOException($e->getMessage());
         }
-        return $metadata;
+        return $describe;
     }
 
 }

@@ -77,6 +77,11 @@ class Parameters
     protected $charset;
 
     /**
+     * Atributos (opciones PDO)
+     */
+    protected $attributes;
+
+    /**
      * Constructor de la clase
      *
      * @param string $id
@@ -92,6 +97,7 @@ class Parameters
         isset($config['host']) && $this->host = $config['host'];
         isset($config['port']) && $this->port = $config['port'];
         isset($config['charset']) && $this->charset = $config['charset'];
+        isset($config['attributes']) && $this->attributes = $config['attributes'];
     }
 
     /**
@@ -102,6 +108,28 @@ class Parameters
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Obtiene el tipo de adaptador asociado a la conexión
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Establece el tipo de motor
+     *
+     * @param string $type
+     * @return \ActiveRecord\Parameters
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+        return $this;
     }
 
     /**
@@ -210,28 +238,6 @@ class Parameters
     }
 
     /**
-     * Obtiene el tipo de adaptador asociado a la conexión
-     *
-     * @return string
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * Establece el tipo de motor
-     *
-     * @param string $type
-     * @return \ActiveRecord\Parameters
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
      * Obtiene el charset de la conexión
      *
      * @return string
@@ -252,6 +258,29 @@ class Parameters
         $this->charset = $charset;
         return $this;
     }
+
+    /**
+     * Obtiene los atributos PDO a usar en la conexión
+     *
+     * @return array
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Establece el tipo de motor
+     *
+     * @param array $attributes
+     * @return \ActiveRecord\Parameters
+     */
+    public function setAttributes($attributes)
+    {
+        $this->attributes = $attributes;
+        return $this;
+    }
+
 
     /**
      * Convierte el objeto en un array

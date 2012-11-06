@@ -34,107 +34,127 @@ use ActiveRecord\Metadata\Attribute;
 class Metadata
 {
 
-    /**
-     * Atributos de modelo (metadata)
-     *
-     * @var array
-     * */
-    private $attributes = array();
+	/**
+	 * Atributos de modelo (metadata)
+	 *
+	 * @var array
+	 */
+	private $_attributes = array();
 
-    /**
-     * Lista de atributos
-     *
-     * @var array
-     */
-    private $_attributesList = array();
+	/**
+	 * Lista de atributos
+	 *
+	 * @var array
+	 */
+	private $_attributesList = array();
 
-    /**
-     * Clave primaria
-     *
-     * @var string
-     */
-    private $_PK = NULL;
+	/**
+	 * Clave primaria
+	 *
+	 * @var string
+	 */
+	private $_PK = NULL;
 
-    /**
-     * Claves foraneas
-     *
-     * @var array
-     */
-    private $_FK = NULL;
+	/**
+	 * Claves foraneas
+	 *
+	 * @var array
+	 */
+	private $_FK = NULL;
 
-    /**
-     * Obtiene la metadata de un atributo
-     *
-     * @param string $attribute nombre de atributo
-     * @return Attribute
-     * */
-    public function attribute($attribute = NULL)
-    {
-        if (!isset($this->_attributes[$attribute])) {
-            $this->_attributes[$attribute] = new Attribute();
-            $this->_attributesList[] = $attribute;
-        }
-        return $this->_attributes[$attribute];
-    }
+	/**
+	 * Obtiene la metadata de un atributo
+	 *
+	 * @param string $attribute nombre de atributo
+	 * @return \ActiveRecord\Metadata\Attribute
+	 */
+	public function addAttribute($attribute = NULL)
+	{
+		if (!isset($this->_attributes[$attribute])) {
+			$this->_attributes[$attribute] = new Attribute();
+			$this->_attributesList[] = $attribute;
+		}
+		return $this->_attributes[$attribute];
+	}
 
-    /**
-     * Obtiene los atributos
-     *
-     * @return array
-     */
-    public function getAttributes()
-    {
-        return $this->_attributes;
-    }
+	/**
+	 * Obtiene los atributos
+	 *
+	 * @return array
+	 */
+	public function getAttributes()
+	{
+		return $this->_attributes;
+	}
 
-    /**
-     * Obtiene la lista de atributos
-     *
-     * @return array
-     */
-    public function getAttributesList()
-    {
-        return $this->_attributesList;
-    }
+	/**
+	 * Obtiene la lista de atributos
+	 *
+	 * @return array
+	 */
+	public function getAttributesList()
+	{
+		return $this->_attributesList;
+	}
 
-    /**
-     * Asigna la clave primaria
-     *
-     * @param string $pk
-     * */
-    public function setPK($pk = NULL)
-    {
-        $this->_PK = $pk;
-    }
+	/**
+	 * Asigna la clave primaria
+	 *
+	 * @param string $pk
+	 */
+	public function setPK($pk = NULL)
+	{
+		$this->_PK = $pk;
+	}
 
-    /**
-     * Obtiene la clave primaria
-     *
-     * @return string
-     * */
-    public function getPK()
-    {
-        return $this->_PK;
-    }
+	/**
+	 * Obtiene la clave primaria
+	 *
+	 * @return string
+	 */
+	public function getPK()
+	{
+		return $this->_PK;
+	}
 
-    /**
-     * Asigna las claves foraneas
-     *
-     * @param array $fk
-     * */
-    public function setFK($fk = NULL)
-    {
-        $this->_FK = $fk;
-    }
+	/**
+	 * Asigna las claves foraneas
+	 *
+	 * @param array $fk
+	 */
+	public function setFK($fk = NULL)
+	{
+		$this->_FK = $fk;
+	}
 
-    /**
-     * Obtiene las claves foraneas
-     *
-     * @return array | NULL
-     * */
-    public function getFK()
-    {
-        return $this->_FK;
-    }
+	/**
+	 * Obtiene las claves foraneas
+	 *
+	 * @return array | NULL
+	 */
+	public function getFK()
+	{
+		return $this->_FK;
+	}
+
+	/**
+	 * Establece el estado interno de un objeto a partir de sus propiedades
+	 *
+	 * @param array $properties
+	 */
+	public static function __set_state($properties)
+	{
+		$metaData = array();
+		if(isset($properties['_attributes'])){
+			$properties->setAttributes($properties['_attributes']);
+		}
+		if(isset($properties['_attributesList'])){
+			$properties->setAttributesList($properties['_attributesList']);
+		}
+		if(isset($properties['_PK'])){
+			$properties->setAttributes($properties['_PK']);
+		}
+		return $metadata;
+	}
 
 }

@@ -18,14 +18,14 @@
  * @category   Kumbia
  * @package    ActiveRecord
  * @subpackage Adapter
- * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
+ * @copyright  Copyright (c) 2005-2012 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-namespace ActiveRecord\Adapter;
+namespace ActiveRecord\Db\Adapter;
 
-use ActiveRecord\Adapter\Adapter;
-use ActiveRecord\Metadata\Metadata;
+use ActiveRecord\Db\Column;
+use ActiveRecord\Db\Adapter\Adapter;
 
 /**
  * \ActiveRecord\Adapter\Adapter\Pgsql

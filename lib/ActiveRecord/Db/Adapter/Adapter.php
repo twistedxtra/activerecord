@@ -22,28 +22,21 @@
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-namespace ActiveRecord\Adapter;
+namespace ActiveRecord\Db\Adapter;
 
 use PDO;
 use ActiveRecord\Config\Config;
-use ActiveRecord\DbPool\DbPool;
 use ActiveRecord\Query\DbQuery;
 use ActiveRecord\Config\Parameters;
+use ActiveRecord\Exception;
 
 /**
- * \ActiveRecord\Adapter\Adapter
+ * \ActiveRecord\Db\Adapter\Adapter
  *
  * Clase base para adaptadores
  */
 abstract class Adapter
 {
-
-    /**
-     * Instancias de adaptadores por conexión
-     *
-     * @var array
-     */
-    private static $adapters = array();
 
     /**
      * Nombre de conexión
@@ -53,13 +46,9 @@ abstract class Adapter
     protected $config;
 
     /**
-     * Genera la descripción de una tabla
-     *
-     * @param string $table tabla
-     * @param string $schema schema
-     * @return array
+     * @var PDO
      */
-    abstract public function describe($table, $schema = NULL);
+    protected $pdo;
 
     /**
      * Constructor
@@ -68,46 +57,36 @@ abstract class Adapter
      */
     public function __construct(Parameters $config)
     {
-        $this->config = $config;
-        if ($charset = $config->getCharset()) {
-            DbPool::factory($config)
-                    ->exec("SET CHARACTER SET $charset");
+
+        try {
+
+            $pdo = new PDO(
+                $config->getType() . ':host=' . $config->getHost() . ';dbname=' . $config->getDbName(),
+                $config->getUsername(),
+                $config->getPassword(), $config->getAttributes());
+
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage());
         }
+
+        if ($charset = $config->getCharset()) {
+            $pdo->exec("SET CHARACTER SET $charset");
+        }
+
+        $this->config = $config;
+        $this->pdo = $pdo;
     }
 
     /**
-     * Obtiene instancia de adaptador en funcion de la conexion (utiliza Singleton)
+     * Genera la descripción de una tabla
      *
-     * @param string $connection conexion a base de datos en databases.ini
-     * @return \ActiveRecord\Adapter\Adapter
-     * @throws Exception
+     * @param string $table tabla
+     * @param string $schema schema
+     * @return array
      */
-    public static function factory($configName = NULL)
-    {
-        //si es null establece "default"
-        $configName || $configName = Config::getDefault();
-
-        // Si no existe el Singleton
-        if (!isset(self::$adapters[$configName])) {
-
-            if (!$config = Config::get($configName)) {
-                throw new \Exception("No existe la configuración de conexión $configName");
-            }
-
-            if (!$config->getType()) {
-                throw new \Exception("Debe definir el tipo de base de datos a la que se conectará (mysql, postgres, oracle, etc..)");
-            }
-
-            // Genera el nombre de clase
-            $Class = 'ActiveRecord\\Adapter\\' . ucfirst($config->getType());
-
-            // Instancia el adaptador
-            self::$adapters[$configName] = new $Class($config);
-        }
-
-        // Retorna el adaptador
-        return self::$adapters[$configName];
-    }
+    abstract public function describe($table, $schema = NULL);
 
     /**
      * Genera la consulta sql concreta
@@ -300,7 +279,7 @@ abstract class Adapter
      */
     public function pdo()
     {
-        return DbPool::factory($this->config);
+        return $this->pdo;
     }
 
     /**
@@ -312,7 +291,7 @@ abstract class Adapter
     public function prepare($sql)
     {
         // PDOStatement
-        return $this->pdo()->prepare($sql);
+        return $this->pdo->prepare($sql);
     }
 
     /**
@@ -324,7 +303,7 @@ abstract class Adapter
     public function prepareDbQuery($dbQuery)
     {
         // Prepara el dbQuery
-        return $this->pdo()->prepare($this->query($dbQuery));
+        return $this->pdo->prepare($this->query($dbQuery));
     }
 
     /**
@@ -343,7 +322,7 @@ abstract class Adapter
      */
     public function execute(DbQuery $query)
     {
-        $statement = $this->pdo()->query($this->query($query));
+        $statement = $this->pdo->query($this->query($query));
 
         $statement->execute($query->getBind());
 

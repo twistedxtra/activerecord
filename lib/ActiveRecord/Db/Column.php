@@ -17,19 +17,19 @@
  *
  * @category   Kumbia
  * @package    ActiveRecord
- * @subpackage Metadata
+ * @subpackage Db
  * @copyright  Copyright (c) 2005-2009 Kumbia Team (http://www.kumbiaphp.com)
  * @license    http://wiki.kumbiaphp.com/Licencia     New BSD License
  */
 
-namespace ActiveRecord\Metadata;
+namespace ActiveRecord\Db;
 
 /**
- * \ActiveRecord\Metadata\Attribute
+ * \ActiveRecord\Db\Column
  *
  * Describe cada atributo de un modelo
  */
-class Attribute
+class Column
 {
     /**
      * Alias del campo
@@ -80,5 +80,19 @@ class Attribute
      * Formato para fechas
      */
     public $format = NULL;
+
+    /**
+     * Establece el estado interno de un objeto a partir de sus propiedades
+     *
+     * @param array $properties
+     */
+    public static function __set_state($properties)
+    {
+        $attribute = new self();
+        foreach ($properties as $property => $value) {
+            $attribute->$property = $value;
+        }
+        return $attribute;
+    }
 
 }
