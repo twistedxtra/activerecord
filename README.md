@@ -1,36 +1,41 @@
 ActiveRecord 2
 ==============
 
-Nuevo Active Record para la nueva versión de KumbiaPHP que trabaja con php 5.3 ó superior, trabaja con PDO.
+Nuevo Active Record para la nueva versión de KumbiaPHP que trabaja con PHP 5.3 ó superior, trabaja con PDO.
 
-Aunque es una librería realizada con la finalidad de ofrecer una capa de abstraccion a base de datos para el framework KumbiaPHP, esta nueva versión puede ser usada en cualquier proyecto php.
+Aunque es una librería realizada con la finalidad de ofrecer una capa de abstracción a base de datos para el
+framework KumbiaPHP, esta nueva versión puede ser usada en cualquier proyecto PHP.
 
-Actualmente no tiene su propio autoloader, por lo que para usarlo se debe registrar la ruta hacie lib en cualquier autoloader que cumpla las especificaciones PSR-0.
+Actualmente no tiene su propio autoloader, por lo que para usarlo se debe registrar la ruta hacia lib en
+cualquier autoloader que cumpla las especificaciones PSR-0.
 
-Configuración:
---------------
+Configuración
+-------------
+Configuración de la conexión a la base de datos:
 
-    * Configuración de la conexión a la base de datos:
+```php
 
-::
+<?php
 
-    <?php
+use ActiveRecord\Config\Config;
+use ActiveRecord\Config\Parameters;
 
-    use ActiveRecord\Config\Config;
-    use ActiveRecord\Config\Parameters;
+Config::add(new Parameters("default", array(
+    'username' => 'root',
+    'password' => 'contraseña',
+    'host' => 'localhost', //por defecto localhost
+    'type' => 'mysql',
+    'port' => '3306', //si no se especifica se usa el puerto por defecto del gestor de base de datos usado.
+    'name' => 'nombre_base_de_datos',
+)));
 
-    Config::add(new Parameters("default", array(
-            'username' => 'root',
-            'password' => 'contraseña',
-            'host' => 'localhost', //por defecto localhost
-            'type' => 'mysql',
-            'port' => '3306', //si no se especifica se usa el puerto por defecto del gestor de base de datos usado.
-            'name' => 'nombre_base_de_datos',
-    )));
+?>
+```
 
 Con estos sencillos pasos ya tenemos configurada nuestra conexión a la base de datos.
 
-    * Creando un Modelo:
+Creando un Modelo:
+------------------
 
 ::
 
