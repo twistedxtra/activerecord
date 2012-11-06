@@ -34,81 +34,99 @@ Config::add(new Parameters("default", array(
 
 Con estos sencillos pasos ya tenemos configurada nuestra conexión a la base de datos.
 
-Creando un Modelo:
-------------------
+Creando un Modelo
+-----------------
 
-::
+```php
 
-    <?php
+<?php
 
-    use ActiveRecord\Model;
+use ActiveRecord\Model;
 
-    class Usuarios extends Model{}
+class Usuarios extends Model
+{
 
-Ahora nuestra clase usuario posee todos los métodos basicos para el acceso y comunicación con nuestra base de datos.
+}
+?>
+```
+
+Ahora nuestra clase usuario posee todos los métodos básicos para el acceso y comunicación con nuestra base de datos.
 por defecto el nombre de la tabla es el nombre del módelo en notación small_case, sin embargo para casos donde no se
 pueda cumpliar la conversión, podemos especificar el nombre de la tabla como un atributo de la clase, ejemplo:
 
-::
+```php
 
-   <?php
+<?php
 
-    use ActiveRecord\Model;
+use ActiveRecord\Model;
 
-    class Usuarios extends Model{
-         protected $table = 'users'; //nuestra tabla en la base de datos se llama user
-    }
+class Usuarios extends Model
+{
+    //La tabla en la base de datos se llama users
+    protected $table = 'users';
+}
 
+?>
+```
 
-Consultando registros:
-----------------------
-
+Consultando registros
+---------------------
 La lib ofrece una serie de métodos para la realización de consultas a nuestra base de datos, veamos algunos ejemplos:
 
-::
+```php
 
-    <?php
+<?php
 
-    //consultando todos los registros en la tabla.
+//Consultando todos los registros en la tabla.
+//Devuelve todos los registros de la tabla en la base de datos
 
-    $result = Usuarios::findAll(); //nos devuelve todos los registros de la tabla en la base de datos.
+$usuarios = Usuarios::findAll();
+foreach($usuarios as $usuario){
+    //Cada elemento iterado en el foreach es un objeto Usuarios
+    echo $usuario->nombres;
+}
 
-    foreach($result as $e){
-        echo $e->nombres; //cada elemento iterado en el foreach es un objeto Usuarios
-    }
+//Obteniendo el resultados como una matriz
+//Devuelve todos los registros de la tabla en la base de datos como un arreglo.
 
-    //obteniendo el resultados como una matriz
+$usuarios = Usuarios::findAll("array");
+foreach($usuarios as $usuario){
+    //Cada elemento iterado en el foreach es un arreglo
+    echo $e["nombres"];
+}
 
-    $result = Usuarios::findAll("array"); //nos devuelve todos los registros de la tabla en la base de datos como un arreglo.
+?>
+```
 
-    foreach($result as $e){
-        echo $e["nombres"]; //cada elemento iterado en el foreach es un arreglo
-    }
+Filtrando Consultas
+-------------------
 
-Filtrando Consultas:
---------------------
+Para filtrar consultas el active record nos ofrece una clase DbQuery que nos permitirá construir
+consultas SQL de manera orientada a Objetos.
 
-Para filtrar consultas el active record nos ofrece una clase DbQuery que nos permitirá construir consultas SQL de manera orientada a Objetos.
+```php
 
-::
+<?php
 
-    <?php
+//El metodo createQuery() crea y nos devuelve una instancia de DbQuery
 
-    //El metodo createQuery() crea y nos devuelve una instancia de DbQuery
+Usuarios::createQuery()
+    ->where("nombres = :nom")
+    ->bindValue("nom", "Manuel José");
 
-    Usuarios::createQuery()
-                ->where("nombres = :nom")
-                ->bindValue("nom", "Manuel José");
+//ya que el active record trabaja con PDO, y este permite crear consultas preparadas, es decir, los valores
+//de variables no se colocan directamente en la cadena de consulta, sino que se pasan a traves de métodos
+//de la clase PDO, que se encargan de filtrar y sanitizar los valores de la consulta, el DbQuery permite establecer
+//estos valores directamente en su clase a través de los métodos bindValue($param,$value) y bind($params).
 
-    //ya que el active record trabaja con PDO, y este permite crear consultas preparadas, es decir, los valores
-    //de variables no se colocan directamente en la cadena de consulta, sino que se pasan a traves de métodos
-    //de la clase PDO, que se encargan de filtrar y sanitizar los valores de la consulta, el DbQuery permite establecer
-    //estos valores directamente en su clase a traves de los métodos bindValue($param,$value) y bind($params).
-
-    $result = Usuarios::findAll(); //aunque llamemos al mismo metodo findAll, esté va a filtrar los datos por medio de
+$usuarios = Usuarios::findAll(); //aunque llamemos al mismo metodo findAll, esté va a filtrar los datos por medio de
                                 //las especificaciones indicadas en la instancia del DbQuery.
 
-    //mostramos los registros que nos devolvió la consulta:
-    foreach($result as $e){
-        echo $e->nombres; //cada elemento iterado en el foreach es un objeto Usuarios
-    }
+//mostramos los registros que nos devolvió la consulta:
+foreach($usuarios as $usuario){
+    //Cada elemento iterado en el foreach es un objeto Usuarios
+    echo $usuario->nombres;
+}
+
+?>
+```
