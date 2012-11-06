@@ -24,10 +24,10 @@ veamos un ejemplo:
 	//en el siguiente ejemplo crearemos la configuración en el constructor de la clase:
 
 	$mysql = new Parameters("config_mysql", array(
+		"type"     => "mysql"
 		'username' => "root"
 		"password" => "123456"
 		"host"     => "localhost"
-		"type"     => "mysql"
 		"name"     => "mi_base_de_datos"
 	));
 
@@ -60,12 +60,12 @@ en el atributo $conection del módelo, ejemplo:
 
 	class Clientes extends Model
 	{
-			protected $connection = "config_postgres"
+		protected $connection = "config_postgres"
 	}
 
 	class Clientes extends Model
 	{
-			protected $connection = "config_mysql"
+		protected $connection = "config_mysql"
 	}
 
 	class Clientes extends Model
