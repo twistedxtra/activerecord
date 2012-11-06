@@ -12,7 +12,7 @@
 	<testsuites>
 		<testsuite name="main">
 			<file>ConfigTest.php</file>
-			<file>AdapterTest.php</file>
+			<file>DbTest.php</file>
 		</testsuite>
 	</testsuites>
 </phpunit>

@@ -71,10 +71,10 @@ class Pgsql extends Adapter
             if ($results) {
                 $metadata = new Metadata();
                 while ($field = $prepare->fetchObject()) {
+
                     //Nombre del Campo
                     $attribute = $metadata->attribute($field->name);
-                    //alias
-                    $attribute->alias = ucwords(strtr($field->name, '_-', '  '));
+
                     //valor por defecto
                     if (!is_null($field->default)) {
                         if (strpos($field->default, 'nextval(') !== FALSE) {
@@ -85,18 +85,23 @@ class Pgsql extends Adapter
                             $attribute->default = $field->default;
                         }
                     }
+
                     //puede ser null?
                     if ($field->null == 'NO') {
                         $attribute->notNull = TRUE;
                     }
+
                     //Relaciones
                     if (substr($field->name, strlen($field->name) - 3, 3) == '_id') {
                         $attribute->alias = ucwords(strtr($field->name, '_-', '  '));
                     }
+
                     //tipo de dato
                     $attribute->type = $field->type;
+
                     //longitud
                     $attribute->length = $field->length;
+
                     //indices
                     switch ($field->index) {
                         case 'PRI':

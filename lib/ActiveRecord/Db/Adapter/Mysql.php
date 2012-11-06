@@ -55,9 +55,6 @@ class Mysql extends Adapter
                     //Nombre del Campo
                     $column = new Column();
 
-                    //alias
-                    $column->alias = ucwords(strtr($field->Field, '_-', '  '));
-
                     // autoincremental
                     if ($column->Extra === 'auto_increment') {
                         $column->autoIncrement = TRUE;

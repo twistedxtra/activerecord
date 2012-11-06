@@ -4,9 +4,6 @@ Configuración Inicial
 ActiveRecord permite administrar varias configuraciones de bases de datos que podrán ser usadas por
 nuestros modelos.
 
-Cada configuración es descrita usando la clase Parameters. Config es la encargada de administrar
-las conexiones disponibles.
-
 Estableciendo parámetros de conexión
 ------------------------------------
 
